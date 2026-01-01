@@ -1,0 +1,50 @@
+# Backend
+backend/node_modules/
+backend/.env
+backend/.env.local
+backend/.env.production
+backend/*.log
+backend/uploads/*.pdf
+backend/uploads/*.jpg
+backend/uploads/*.png
+
+# Flutter/Dart
+codiny_platform_app/.dart_tool/
+codiny_platform_app/.flutter-plugins
+codiny_platform_app/.flutter-plugins-dependencies
+codiny_platform_app/.packages
+codiny_platform_app/.pub-cache/
+codiny_platform_app/.pub/
+codiny_platform_app/build/
+codiny_platform_app/android/app/upload-keystore.jks
+codiny_platform_app/android/key.properties
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Documentation (keep these)
+!*.md
+!DEPLOYMENT_GUIDE.md
+!PLAY_STORE_GUIDE.md

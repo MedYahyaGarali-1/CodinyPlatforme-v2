@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>علامات الطريق - تونس</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f2f2f2; margin:0; padding:20px; }
+    h1 { text-align:center; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:25px; margin-top:30px; }
+    .sign { background:white; border-radius:10px; padding:15px; text-align:center; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); transition:0.2s; }
+    .sign:hover { transform:scale(1.07); }
+    .sign img { width:120px; height:120px; object-fit:contain; }
+
+
+    /* Modal */
+    .modal-bg { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+    .modal { position:relative; background:white; padding:20px; border-radius:10px; width:330px; text-align:center; }
+    .close { position:absolute; top:10px; right:10px; cursor:pointer; color:red; font-size:20px; font-weight:bold; }
+    #modalImg { width:150px; height:150px; object-fit:contain; margin-bottom:15px; }
+  </style>
+</head>
+<body>
+
+<h1>علامات الطريق - تونس</h1>
+<span id="closeHTML" class="close">✖</span>
+<div class="grid" id="signGrid"></div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <span id="closeBtn" class="close">✖</span>
+    <h2 id="modalTitle"></h2>
+    <img id="modalImg" />
+    <p id="modalDesc"></p>
+  </div>
+</div>
+
+<script>
+  const signs = [
+    { name: "قف", desc: "يلزم توقف أربعة عجالي قبل ما تكمل الطريق 0 كم/س.", img: "Stop.svg" },
+    { name: "ممنوع المرور", desc: "ممنوع الدخول للعربات.", img: "NoPass.png" },
+    { name: "ممر للمترجلين", desc: "يلزمّك تنقص في السرعة وتخلي الأولوية للعباد.", img: "Walker.png" },
+    { name: "خطر", desc: "رد بالك فما خطر قدّام.", img: "Danger.png" },
+    { name: "أولوية المرور", desc: "عندك الأولوية علّى في باقي الطرق.", img: "Periority.png" },
+    { name: "نهاية أولوية المرور", desc: "نهاية منطقة عندك فيها الأولوية.", img: "NoPeriority.png" },
+    { name: "ممنوع الدوران لليسار", desc: "ممنوع تدور ليسار.", img: "NoLeft.png" },
+    { name: "ممنوع الدوران لليمين", desc: "ممنوع تدور ليمين.", img: "NoRight.png" },
+    { name: "ممنوع الدوران للخلف", desc: "ممنوع تعمل U-Turn.", img: "NoReturn.png" },
+    { name: "ممنوع الوقوف", desc: "ممنوع توقف هنا.", img: "NoStop.png" },
+    { name: "ممنوع الوقوف والتوقف", desc: "ممنوع تقف أو تتوقّف حتا شوية.", img: "NoStopAndWait.png" },
+    { name: "ممنوع الدراجات", desc: "ممنوع دخول الدراجات تتعدا من هنا.", img: "NoBike.png" },
+    { name: "ممنوع الشاحنات", desc: "ممنوع دخول الشاحنات تعدا من هنا.", img: "NoTruck.svg" },
+    { name: "منعرج خطير", desc: "فمّا دورة يلزم تنقص السرعة.", img: "Zig.png" },
+    { name: "منعرجات خطيرة", desc: "فما برشا دوراترد بالك.", img: "ZigZag.png" },
+    { name: "طريق زلقة", desc: "الطريق تنجم تكون تزلق.", img: "Slipy.png" },
+    { name: "أشغال", desc: "فمّا أشغال قدّام.", img: "Work.png" },
+    { name: "مطب", desc: "مطب يلزم تنقص السرعة.", img: "Donkey.png" },
+    { name: "ممر أطفال", desc: "المنطقة فيها صغار، رد بالك.", img: "Kids.png" },
+    { name: "منحدر خطير", desc: "الطريق فيها هبطا كبير.", img: "Down.png" },
+    { name: "صعود حاد", desc: "الطريق فيها صعدا كبيرة.", img: "UP.png" },
+    { name: "ممر دراجات", desc: "طريق للمطرات مش للطراهب.", img: "Bike.png" },
+    { name: "سرعة قصوى 30", desc: "ممنوع تفوت 30 كم/س.", img: "30.png" },
+    { name: "سرعة قصوى 50", desc: "ممنوع تفوت 50 كم/س.", img: "50.svg" },
+    { name: "سرعة قصوى 70", desc: "ممنوع تفوت 70 كم/س.", img: "70.png" },
+    { name: "إجباري لليسار", desc: "يلزم تمشي ليسار.", img: "Left.png" },
+    { name: "إجباري لليمين", desc: "يلزم تمشي ليمن.", img: "Right.png" },
+    { name: "مسلك إجباري", desc: "يلزم تتبع الطريق هذا.", img: "Must.png" },
+    { name: "نهاية المنع", desc: "    تجم تعمل لي تحب مش مخالف للقنون.", img: "Free.png" },
+    { name: "طريق ذات أولوية", desc: "الطريق هذا عندو أولوية.", img: "RoadPeriority.png" }
+  ];
+
+  const grid = document.getElementById("signGrid");
+
+  signs.forEach((sign, i) => {
+    const div = document.createElement("div");
+    div.className = "sign";
+    div.innerHTML = `<img src="${sign.img}">`;
+    div.onclick = () => openModal(sign);
+    grid.appendChild(div);
+  });
+
+  const modalBg = document.getElementById("modalBg");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalDesc = document.getElementById("modalDesc");
+  const closeBtn = document.getElementById("closeBtn");
+  const closeHTML = document.getElementById("closeHTML");
+
+  function openModal(sign) {
+    modalTitle.textContent = sign.name;
+    document.getElementById('modalImg').src = sign.img;
+    modalDesc.textContent = sign.desc;
+    modalBg.style.display = "flex";
+  }
+
+  closeHTML.onclick = () => window.close();
+  closeBtn.onclick = () => modalBg.style.display = "none";
+  modalBg.onclick = (e) => { if(e.target === modalBg) modalBg.style.display = "none"; }
+</script>
+
+</body>
+</html>
