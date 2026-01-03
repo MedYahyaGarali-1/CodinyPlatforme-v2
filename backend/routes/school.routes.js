@@ -17,32 +17,51 @@ async function requireSchool(req, res) {
 
 /**
  * GET /schools/me
- * School dashboard data
+ * School dashboard data with live statistics
  */
 router.get('/me', auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const result = await pool.query(
-      `
-      SELECT 
-        id,
-        name,
-        total_students,
-        total_earned,
-        total_owed_to_platform
-      FROM schools
-      WHERE user_id = $1
-      `,
+    // Get school basic info
+    const schoolResult = await pool.query(
+      'SELECT id, name, is_active FROM schools WHERE user_id = $1',
       [userId]
     );
 
-    if (!result.rowCount) {
+    if (!schoolResult.rowCount) {
       return res.status(404).json({ message: 'School not found' });
     }
 
-    res.json(result.rows[0]);
+    const school = schoolResult.rows[0];
+
+    // Calculate live statistics
+    const statsResult = await pool.query(
+      `
+      SELECT 
+        COUNT(DISTINCT s.id)::integer as total_students,
+        COALESCE(SUM(CASE WHEN r.status = 'earned' THEN r.amount ELSE 0 END), 0)::integer as total_earned,
+        COALESCE(SUM(CASE WHEN r.status = 'owed_to_platform' THEN r.amount ELSE 0 END), 0)::integer as total_owed_to_platform
+      FROM students s
+      LEFT JOIN revenue_tracking r ON r.school_id = $1
+      WHERE s.school_id = $1
+      `,
+      [school.id]
+    );
+
+    const stats = statsResult.rows[0];
+
+    // Combine school info with live stats
+    res.json({
+      id: school.id,
+      name: school.name,
+      is_active: school.is_active,
+      total_students: stats.total_students || 0,
+      total_earned: stats.total_earned || 0,
+      total_owed_to_platform: stats.total_owed_to_platform || 0,
+    });
   } catch (err) {
+    console.error('Error loading school profile:', err);
     res.status(500).json({ message: 'Failed to load school profile' });
   }
 });
