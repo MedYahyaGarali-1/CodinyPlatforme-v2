@@ -39,12 +39,9 @@ router.get('/me', auth, async (req, res) => {
     const statsResult = await pool.query(
       `
       SELECT 
-        COUNT(DISTINCT s.id)::integer as total_students,
-        COALESCE(SUM(CASE WHEN r.status = 'earned' THEN r.amount ELSE 0 END), 0)::integer as total_earned,
-        COALESCE(SUM(CASE WHEN r.status = 'owed_to_platform' THEN r.amount ELSE 0 END), 0)::integer as total_owed_to_platform
-      FROM students s
-      LEFT JOIN revenue_tracking r ON r.school_id = $1
-      WHERE s.school_id = $1
+        (SELECT COUNT(*) FROM students WHERE school_id = $1)::integer as total_students,
+        COALESCE((SELECT SUM(amount) FROM revenue_tracking WHERE school_id = $1 AND status = 'earned'), 0)::integer as total_earned,
+        COALESCE((SELECT SUM(amount) FROM revenue_tracking WHERE school_id = $1 AND status = 'owed_to_platform'), 0)::integer as total_owed_to_platform
       `,
       [school.id]
     );
