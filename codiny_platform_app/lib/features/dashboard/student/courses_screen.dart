@@ -65,7 +65,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
           centerTitle: true,
           elevation: 0,
-          automaticallyImplyLeading: false, // Remove back button
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         body: _buildBody(),
       ),

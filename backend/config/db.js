@@ -8,8 +8,7 @@ const pool = new Pool(
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
         connectionTimeoutMillis: 10000,
         idleTimeoutMillis: 30000,
-        max: 20,
-        client_encoding: 'UTF8'
+        max: 20
       }
     : {
         host: process.env.DB_HOST,
@@ -17,12 +16,13 @@ const pool = new Pool(
         database: process.env.DB_NAME,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        client_encoding: 'UTF8'
       }
 );
 
-pool.on('connect', () => {
-  console.log('🟢 Connected to PostgreSQL');
+// Set UTF-8 encoding on every connection
+pool.on('connect', (client) => {
+  client.query('SET CLIENT_ENCODING TO UTF8');
+  console.log('🟢 Connected to PostgreSQL with UTF-8 encoding');
 });
 
 pool.on('error', (err) => {

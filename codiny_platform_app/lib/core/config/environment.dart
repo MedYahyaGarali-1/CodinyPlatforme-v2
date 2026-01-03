@@ -4,13 +4,13 @@ enum AppEnvironment {
 }
 
 class Environment {
-  static AppEnvironment current = AppEnvironment.dev;
+  static AppEnvironment current = AppEnvironment.prod;
   
-  // 🌐 LOCAL NETWORK - Same WiFi Required!
-  // ✅ Works without ngrok issues
-  // ⚠️ You and friends must be on THE SAME WiFi network
-  // Your PC IP: 192.168.0.201
-  static const String baseUrl = 'http://192.168.0.201:3000';
+  // 🚀 PRODUCTION - Railway Deployment
+  // ✅ Works from ANYWHERE in the world!
+  // ✅ Permanent URL - never changes
+  // ✅ Your friends can test from their homes!
+  static const String baseUrl = 'https://codinyplatforme-v2-production.up.railway.app';
   
   static bool get isDev => current == AppEnvironment.dev;
   static bool get isProd => current == AppEnvironment.prod;

@@ -60,22 +60,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFF0A0E21),
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: const Color(0xFF1D1E33),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.course.title,
-          style: TextStyle(
-            color: colorScheme.onSurface,
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -89,7 +86,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 child: Text(
                   '$_currentPage / $_totalPages',
                   style: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: Colors.white.withOpacity(0.7),
                     fontSize: 14,
                   ),
                 ),
@@ -108,12 +105,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(color: Color(0xFF6C63FF)),
             const SizedBox(height: 16),
             Text(
               'Loading PDF...',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Colors.white.withOpacity(0.6),
               ),
             ),
           ],
