@@ -1,26 +1,5 @@
 const express = require('express');
-const router     // Combine school info with live stats
-    res.json({
-      id: school.id,
-      name: school.name,
-      is_active: school.is_active,
-      total_students: stats.total_students || 0,
-      total_earned: stats.total_earned || 0,
-      total_owed_to_platform: stats.total_owed_to_platform || 0,
-    });
-  } catch (err) {
-    console.error('Error loading school profile:', err);
-    console.error('Error details:', {
-      message: err.message,
-      stack: err.stack,
-      userId: req.user?.id
-    });
-    res.status(500).json({ 
-      message: 'Failed to load school profile',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-  }
-});er();
+const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 const pool = require('../config/db');
 const schoolController = require('../controllers/school.controller');
@@ -80,7 +59,15 @@ router.get('/me', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('Error loading school profile:', err);
-    res.status(500).json({ message: 'Failed to load school profile' });
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      userId: req.user?.id
+    });
+    res.status(500).json({ 
+      message: 'Failed to load school profile',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
