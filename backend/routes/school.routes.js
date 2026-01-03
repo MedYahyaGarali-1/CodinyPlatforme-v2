@@ -25,7 +25,7 @@ router.get('/me', auth, async (req, res) => {
 
     // Get school basic info
     const schoolResult = await pool.query(
-      'SELECT id, name, is_active FROM schools WHERE user_id = $1',
+      'SELECT id, name, active FROM schools WHERE user_id = $1',
       [userId]
     );
 
@@ -52,7 +52,7 @@ router.get('/me', auth, async (req, res) => {
     res.json({
       id: school.id,
       name: school.name,
-      is_active: school.is_active,
+      active: school.active,
       total_students: stats.total_students || 0,
       total_earned: stats.total_earned || 0,
       total_owed_to_platform: stats.total_owed_to_platform || 0,
