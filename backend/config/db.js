@@ -5,7 +5,10 @@ const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 20
       }
     : {
         host: process.env.DB_HOST,
@@ -22,7 +25,7 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('🔴 PostgreSQL error:', err);
-  process.exit(1);
+  // Don't exit process on connection errors - let it retry
 });
 
 module.exports = pool;
