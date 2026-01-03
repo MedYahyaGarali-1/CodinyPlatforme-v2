@@ -46,6 +46,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 // GET /students/events - Get my calendar events
 router.get('/events', authMiddleware, async (req, res) => {
   try {
+    console.log('[STUDENT EVENTS] Request received from user:', req.user.id);
     const userId = req.user.id;
 
     // Get student ID from user ID
@@ -54,11 +55,15 @@ router.get('/events', authMiddleware, async (req, res) => {
       [userId]
     );
 
+    console.log('[STUDENT EVENTS] Student query result:', studentResult.rowCount, studentResult.rows);
+
     if (studentResult.rowCount === 0) {
+      console.log('[STUDENT EVENTS] No student found for user_id:', userId);
       return res.status(404).json({ message: 'Student profile not found' });
     }
 
     const studentId = studentResult.rows[0].id;
+    console.log('[STUDENT EVENTS] Found student ID:', studentId);
 
     // Get all events for this student
     const eventsResult = await pool.query(
@@ -71,9 +76,10 @@ router.get('/events', authMiddleware, async (req, res) => {
       [studentId]
     );
 
+    console.log('[STUDENT EVENTS] Found', eventsResult.rowCount, 'events');
     res.json(eventsResult.rows);
   } catch (err) {
-    console.error(err);
+    console.error('[STUDENT EVENTS] Error:', err);
     res.status(500).json({ message: 'Failed to load events', error: err.message });
   }
 });
