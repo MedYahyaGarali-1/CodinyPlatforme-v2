@@ -40,8 +40,8 @@ router.get('/me', auth, async (req, res) => {
       `
       SELECT 
         (SELECT COUNT(*) FROM students WHERE school_id = $1)::integer as total_students,
-        COALESCE((SELECT SUM(amount) FROM revenue_tracking WHERE school_id = $1 AND status = 'earned'), 0)::integer as total_earned,
-        COALESCE((SELECT SUM(amount) FROM revenue_tracking WHERE school_id = $1 AND status = 'owed_to_platform'), 0)::integer as total_owed_to_platform
+        COALESCE((SELECT SUM(school_revenue) FROM revenue_tracking WHERE school_id = $1), 0)::integer as total_earned,
+        COALESCE((SELECT SUM(platform_revenue) FROM revenue_tracking WHERE school_id = $1), 0)::integer as total_owed_to_platform
       `,
       [school.id]
     );
