@@ -325,10 +325,63 @@ async function revokeStudentAccess(req, res) {
   }
 }
 
+/**
+ * GET /api/schools/students/:studentId/exams
+ * Get exam history for a specific student (for school tracking)
+ */
+async function getStudentExams(req, res) {
+  try {
+    const schoolId = req.user.id; // School's user ID from auth middleware
+    const { studentId } = req.params;
+
+    // Verify student belongs to this school
+    const studentCheck = await pool.query(
+      'SELECT id FROM students WHERE id = $1 AND school_id = $2',
+      [studentId, schoolId]
+    );
+
+    if (studentCheck.rowCount === 0) {
+      return res.status(403).json({
+        success: false,
+        error: 'Student not found or does not belong to your school'
+      });
+    }
+
+    // Get exam sessions with results
+    const result = await pool.query(`
+      SELECT 
+        id,
+        started_at,
+        completed_at,
+        score as correct_answers,
+        total_questions,
+        passed,
+        time_taken_seconds,
+        (total_questions - score) as wrong_answers,
+        ROUND((score::decimal / total_questions::decimal) * 100, 2) as score
+      FROM exam_sessions
+      WHERE student_id = $1 AND completed_at IS NOT NULL
+      ORDER BY started_at DESC
+    `, [studentId]);
+
+    res.json({
+      success: true,
+      exams: result.rows
+    });
+  } catch (error) {
+    console.error('Error fetching student exams:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch student exams'
+    });
+  }
+}
+
 module.exports = {
   getPendingStudents,
   approveStudent,
   rejectStudent,
   getApprovedStudents,
-  revokeStudentAccess
+  revokeStudentAccess,
+  getStudentExams
 };

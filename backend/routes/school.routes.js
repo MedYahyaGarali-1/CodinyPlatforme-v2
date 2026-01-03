@@ -381,6 +381,11 @@ router.get('/:schoolId/revenue', auth, async (req, res) => {
 // ==========================
 router.get('/:schoolId/exam-stats', auth, examController.getSchoolExamStats);
 
+// ==========================
+// 📝 GET STUDENT EXAM HISTORY
+// ==========================
+router.get('/students/:studentId/exams', auth, schoolController.getStudentExams);
+
 module.exports = router;
 
 
