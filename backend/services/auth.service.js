@@ -52,7 +52,7 @@ async function register({ name, identifier, password }) {
 
   const user = userResult.rows[0];
 
-  // create student profile with default onboarding state
+  // Create student profile - inactive until school activates or permit chosen
   await pool.query(
     `INSERT INTO students (
       user_id, 
@@ -60,7 +60,7 @@ async function register({ name, identifier, password }) {
       onboarding_complete,
       is_active,
       access_level
-    ) VALUES ($1, 'independent', false, true, 'limited')`,
+    ) VALUES ($1, 'independent', false, false, 'none')`,
     [user.id]
   );
 
