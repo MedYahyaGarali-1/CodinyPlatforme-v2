@@ -80,6 +80,11 @@ class _RegisterScreenState extends State<RegisterScreen>
         password: _passwordController.text,
         session: session,
       );
+      
+      // After successful registration, navigate to onboarding
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/onboarding');
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

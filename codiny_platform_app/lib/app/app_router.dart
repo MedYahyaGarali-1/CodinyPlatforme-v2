@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../features/auth/login/login_screen.dart';
 import '../features/auth/register/register_screen.dart';
 
+// Onboarding
+import '../features/onboarding/onboarding_screen.dart';
+
 // Dashboards
 import '../features/dashboard/student/student_dashboard.dart';
 import '../features/dashboard/school/school_dashboard.dart';
@@ -16,6 +19,9 @@ class AppRouter {
   // Auth
   static const String login = '/login';
   static const String register = '/register';
+  
+  // Onboarding
+  static const String onboarding = '/onboarding';
 
   // Dashboards
   static const String studentDashboard = '/student';
@@ -33,6 +39,9 @@ class AppRouter {
     // Auth
     login: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
+    
+    // Onboarding
+    onboarding: (context) => const OnboardingScreen(),
 
     // Dashboards
     studentDashboard: (context) => const StudentDashboard(),
