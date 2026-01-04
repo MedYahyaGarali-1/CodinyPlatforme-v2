@@ -104,33 +104,32 @@ router.post('/students/activate', auth, async (req, res) => {
 
     const student = studentCheck.rows[0];
 
-    // Schools cannot activate independent students
-    if (student.student_type === 'independent') {
-      return res.status(403).json({ 
-        message: 'Cannot activate independent students. They must pay online.' 
-      });
-    }
+    // 3️⃣ Activate student: Change type if independent, set active, add subscription
+    const start = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 30);
 
-    // Verify student belongs to this school
-    if (student.school_id !== schoolId) {
+    // If student is independent, attach them to the school
+    // If already attached, verify they belong to this school
+    if (student.student_type === 'attached_to_school' && student.school_id !== schoolId) {
       return res.status(403).json({ 
         message: 'Student does not belong to your school' 
       });
     }
 
-    // 3️⃣ Activate subscription (30 days)
-    const start = new Date();
-    const end = new Date();
-    end.setDate(end.getDate() + 30);
-
     await pool.query(
       `
       UPDATE students
-      SET subscription_start = $1,
-          subscription_end = $2
-      WHERE id = $3
+      SET student_type = 'attached_to_school',
+          school_id = $1,
+          is_active = TRUE,
+          access_level = 'full',
+          subscription_start = $2,
+          subscription_end = $3,
+          school_approved_at = CURRENT_TIMESTAMP
+      WHERE id = $4
       `,
-      [start, end, studentId]
+      [schoolId, start, end, studentId]
     );
 
     // 4️⃣ Update school finance
