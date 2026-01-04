@@ -76,6 +76,20 @@ class _LoginScreenState extends State<LoginScreen>
         password: _passwordController.text,
         session: session,
       );
+      
+      // After successful login, navigate based on role
+      if (mounted) {
+        final role = session.role?.name ?? 'student';
+        String route = '/student'; // default
+        
+        if (role == 'school') {
+          route = '/school';
+        } else if (role == 'admin') {
+          route = '/admin';
+        }
+        
+        Navigator.of(context).pushReplacementNamed(route);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
