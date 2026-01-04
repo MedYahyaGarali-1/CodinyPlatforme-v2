@@ -334,14 +334,7 @@ router.post('/events/:eventId/delete', auth, async (req, res) => {
   }
 });
 
-/**
- * Student approval routes
- */
-router.get('/:schoolId/pending-students', auth, schoolController.getPendingStudents);
-router.post('/:schoolId/approve-student', auth, schoolController.approveStudent);
-router.post('/:schoolId/reject-student', auth, schoolController.rejectStudent);
-router.get('/:schoolId/approved-students', auth, schoolController.getApprovedStudents);
-router.post('/:schoolId/revoke-student-access', auth, schoolController.revokeStudentAccess);
+// Removed approval/request routes - students are only added directly by schools
 
 /**
  * GET /schools/:schoolId/revenue

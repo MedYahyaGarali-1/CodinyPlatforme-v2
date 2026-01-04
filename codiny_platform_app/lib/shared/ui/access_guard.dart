@@ -104,21 +104,13 @@ class AccessGuard extends StatelessWidget {
       onPressed = () {
         Navigator.pushNamed(context, '/payment');
       };
-    } else if (access.reason == 'school_pending') {
-      icon = Icons.hourglass_empty;
-      title = '⏳ Waiting for Approval';
-      subtitle = access.message ?? 'Your school is reviewing your request';
-      buttonLabel = 'Check Status';
+    } else if (access.reason == 'school_pending' || access.reason == 'school_rejected') {
+      icon = Icons.school;
+      title = '🏫 School Activation Required';
+      subtitle = access.message ?? 'Give your Student ID to your school to activate your account';
+      buttonLabel = 'Go to Dashboard';
       onPressed = () {
-        // TODO: Show status dialog
-      };
-    } else if (access.reason == 'school_rejected') {
-      icon = Icons.block;
-      title = '❌ Access Denied';
-      subtitle = access.message ?? 'Your request was rejected';
-      buttonLabel = 'Choose Another Method';
-      onPressed = () {
-        Navigator.pushReplacementNamed(context, '/onboarding');
+        Navigator.pushNamed(context, '/student');
       };
     } else {
       icon = Icons.lock_outline;

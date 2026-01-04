@@ -284,19 +284,14 @@ class StudentHomeScreen extends StatelessWidget {
         return const SizedBox.shrink();
       }
     } else if (accessMethod == 'school_linked') {
-      // School-linked learner - check if truly pending (not active or limited access)
-      if (schoolApprovalStatus == 'pending' && (!isActive || accessLevel == 'limited')) {
-        icon = Icons.pending;
+      // School-linked learner - waiting for school to activate
+      if (!isActive || accessLevel == 'limited') {
+        icon = Icons.school;
         backgroundColor = Colors.blue;
-        title = '⏳ Awaiting School Approval';
-        message = 'Your school will review your request within 24-48 hours. You\'ll be notified once approved.';
-      } else if (schoolApprovalStatus == 'rejected') {
-        icon = Icons.cancel;
-        backgroundColor = Colors.red;
-        title = '❌ Request Rejected';
-        message = 'Your school request was rejected. Please contact your school administrator.';
-      } else if (schoolApprovalStatus == 'approved' || (isActive && accessLevel == 'full')) {
-        // Approved or active with full access
+        title = '🏫 Waiting for School Activation';
+        message = 'Give your Student ID to your school. Once they activate your account, you\'ll have full access!';
+      } else if (isActive && accessLevel == 'full') {
+        // Active with full access
         return const SizedBox.shrink();
       } else {
         // No status yet

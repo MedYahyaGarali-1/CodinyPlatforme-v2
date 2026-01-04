@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         if (permitType == 'B') {
           SnackBarHelper.showSuccess(
             context,
-            info ?? 'Permit B selected! Full content available once school approves.'
+            info ?? 'Permit B selected! Give your Student ID to your school to activate your account.'
           );
         } else {
           SnackBarHelper.showInfo(

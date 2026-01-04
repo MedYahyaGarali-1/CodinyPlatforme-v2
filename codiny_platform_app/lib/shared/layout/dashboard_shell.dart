@@ -70,6 +70,12 @@ class DashboardShellState extends State<DashboardShell> {
               icon: const Icon(Icons.logout),
               onPressed: () async {
                 await session.logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
+                }
               },
             ),
         ],
