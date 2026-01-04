@@ -132,7 +132,22 @@ router.post('/students/activate', auth, async (req, res) => {
       [schoolId, start, end, studentId]
     );
 
-    // 4️⃣ Update school finance
+    // 4️⃣ Track revenue: 20 TND for school, 30 TND for platform
+    await pool.query(
+      `
+      INSERT INTO revenue_tracking (
+        student_id,
+        school_id,
+        school_revenue,
+        platform_revenue,
+        total_amount,
+        created_at
+      ) VALUES ($1, $2, 20.00, 30.00, 50.00, CURRENT_TIMESTAMP)
+      `,
+      [studentId, schoolId]
+    );
+
+    // 5️⃣ Update school finance counters
     await pool.query(
       `
       UPDATE schools
@@ -218,7 +233,20 @@ router.post('/students/attach', auth, async (req, res) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    // Update school finance
+    // Track revenue: 20 TND for school, 30 TND for platform
+    await pool.query(
+      `INSERT INTO revenue_tracking (
+        student_id,
+        school_id,
+        school_revenue,
+        platform_revenue,
+        total_amount,
+        created_at
+      ) VALUES ($1, $2, 20.00, 30.00, 50.00, CURRENT_TIMESTAMP)`,
+      [studentId, school.id]
+    );
+
+    // Update school finance counters
     await pool.query(
       `UPDATE schools
        SET total_students = total_students + 1,
