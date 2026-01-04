@@ -22,7 +22,8 @@ router.get('/me', authMiddleware, async (req, res) => {
         school_id,
         school_approval_status,
         COALESCE(is_active, true) as is_active,
-        COALESCE(access_level, 'trial') as access_level
+        COALESCE(access_level, 'trial') as access_level,
+        permit_type
       FROM students
       WHERE user_id = $1
       `,

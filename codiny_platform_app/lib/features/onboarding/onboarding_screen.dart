@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/config/environment.dart';
 import '../../data/repositories/onboarding_repository.dart';
@@ -16,26 +16,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _repo = OnboardingRepository(baseUrl: Environment.baseUrl);
   bool _isLoading = false;
 
-  Future<void> _chooseIndependent() async {
+  Future<void> _choosePermit(String permitType) async {
     setState(() => _isLoading = true);
 
     try {
       final token = context.read<SessionController>().token;
       if (token == null) throw Exception('Not authenticated');
 
-      await _repo.chooseAccessMethod(
+      final result = await _repo.choosePermitType(
         token: token,
-        accessMethod: 'independent',
+        permitType: permitType,
       );
 
       if (mounted) {
-        // For now, show success message and reload dashboard
-        SnackBarHelper.showSuccess(
-          context, 
-          'Great! Please proceed with payment to activate your subscription.'
-        );
+        final info = result['info'] as String?;
         
-        // Navigate back to dashboard - it will show limited access
+        if (permitType == 'B') {
+          SnackBarHelper.showSuccess(
+            context,
+            info ?? 'Permit B selected! Full content available once school approves.'
+          );
+        } else {
+          SnackBarHelper.showInfo(
+            context,
+            info ?? 'Permit $permitType selected! Content coming soon.'
+          );
+        }
+        
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/student',
           (route) => false,
@@ -50,105 +57,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  Future<void> _chooseSchoolLinked() async {
-    // First, show dialog to get school name
-    final schoolName = await _showSchoolNameDialog();
-    
-    if (schoolName == null || schoolName.trim().isEmpty) {
-      return; // User cancelled or entered empty name
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final token = context.read<SessionController>().token;
-      if (token == null) throw Exception('Not authenticated');
-
-      await _repo.chooseAccessMethod(
-        token: token,
-        accessMethod: 'school_linked',
-      );
-
-      // Link to school (using a dummy school_id for now - in production, 
-      // you'd search for the school by name first)
-      await _repo.linkSchool(
-        token: token,
-        schoolId: '00000000-0000-0000-0000-000000000000', // Placeholder
-        schoolName: schoolName,
-      );
-
-      if (mounted) {
-        // Show success message
-        SnackBarHelper.showInfo(
-          context,
-          'Request sent to "$schoolName"! You\'ll get access once they approve (24-48h).'
-        );
-        
-        // Navigate back to dashboard - it will show pending status
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/student',
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        SnackBarHelper.showError(context, 'Error: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<String?> _showSchoolNameDialog() async {
-    final controller = TextEditingController();
-    
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter School Name'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Please enter the name of your school or institution:',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'School Name',
-                hintText: 'e.g., Springfield High School',
-                border: OutlineInputBorder(),
-              ),
-              textCapitalization: TextCapitalization.words,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                Navigator.pop(context, name);
-              }
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -157,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final colorScheme = theme.colorScheme;
 
     return PopScope(
-      canPop: false, // Prevent back button
+      canPop: false,
       child: Scaffold(
         body: SafeArea(
           child: Padding(
@@ -167,9 +75,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 const SizedBox(height: 40),
                 
-                // Header
                 Text(
-                  'Welcome! 👋',
+                  'Choose Your Permit 🚗',
                   style: theme.textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -177,7 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Choose how you want to access the platform',
+                  'Select the type of driving permit you want to learn',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -186,36 +93,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 
                 const Spacer(),
                 
-                // Option 1: Independent Learning
-                _AccessMethodCard(
-                  icon: Icons.school,
-                  title: '🎓 Independent Learning',
-                  subtitle: 'Full access with subscription',
-                  benefits: const [
-                    '✓ Full access with subscription',
-                    '✓ Flexible payment options',
-                    '✓ Instant activation',
-                  ],
-                  buttonLabel: 'Choose This Option',
-                  onPressed: _isLoading ? null : _chooseIndependent,
-                  color: colorScheme.primary,
+                _PermitCard(
+                  icon: '🏍️',
+                  title: 'Permit A',
+                  subtitle: 'Motorcycle license',
+                  badge: 'Coming Soon',
+                  isAvailable: false,
+                  onPressed: _isLoading ? null : () => _choosePermit('A'),
                 ),
                 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 
-                // Option 2: School Linked
-                _AccessMethodCard(
-                  icon: Icons.business,
-                  title: '🏫 Linked to School',
-                  subtitle: 'Free access pending approval',
-                  benefits: const [
-                    '✓ Free access (pending approval)',
-                    '✓ Managed by your institution',
-                    '✓ May take 24-48 hours',
-                  ],
-                  buttonLabel: 'Choose This Option',
-                  onPressed: _isLoading ? null : _chooseSchoolLinked,
-                  color: colorScheme.secondary,
+                _PermitCard(
+                  icon: '🚗',
+                  title: 'Permit B',
+                  subtitle: 'Car license',
+                  badge: 'Available Now',
+                  isAvailable: true,
+                  onPressed: _isLoading ? null : () => _choosePermit('B'),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                _PermitCard(
+                  icon: '🚛',
+                  title: 'Permit C',
+                  subtitle: 'Truck license',
+                  badge: 'Coming Soon',
+                  isAvailable: false,
+                  onPressed: _isLoading ? null : () => _choosePermit('C'),
                 ),
                 
                 const Spacer(),
@@ -233,23 +139,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class _AccessMethodCard extends StatelessWidget {
-  final IconData icon;
+class _PermitCard extends StatelessWidget {
+  final String icon;
   final String title;
   final String subtitle;
-  final List<String> benefits;
-  final String buttonLabel;
+  final String badge;
+  final bool isAvailable;
   final VoidCallback? onPressed;
-  final Color color;
 
-  const _AccessMethodCard({
+  const _PermitCard({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.benefits,
-    required this.buttonLabel,
+    required this.badge,
+    required this.isAvailable,
     required this.onPressed,
-    required this.color,
   });
 
   @override
@@ -258,93 +162,94 @@ class _AccessMethodCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card(
-      elevation: 2,
+      elevation: isAvailable ? 4 : 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: color.withOpacity(0.3),
-          width: 2,
+          color: isAvailable 
+              ? colorScheme.primary.withOpacity(0.5)
+              : colorScheme.outlineVariant,
+          width: isAvailable ? 2 : 1,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon and Title
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: isAvailable
+                      ? colorScheme.primaryContainer
+                      : colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
                     icon,
-                    color: color,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Benefits
-            ...benefits.map((benefit) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                benefit,
-                style: theme.textTheme.bodyMedium,
-              ),
-            )),
-            
-            const SizedBox(height: 20),
-            
-            // Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  buttonLabel,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    style: const TextStyle(fontSize: 32),
                   ),
                 ),
               ),
-            ),
-          ],
+              
+              const SizedBox(width: 16),
+              
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isAvailable ? null : colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isAvailable
+                                ? Colors.green.withOpacity(0.2)
+                                : Colors.orange.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            badge,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: isAvailable ? Colors.green.shade700 : Colors.orange.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 20,
+                color: isAvailable ? colorScheme.primary : colorScheme.outlineVariant,
+              ),
+            ],
+          ),
         ),
       ),
     );

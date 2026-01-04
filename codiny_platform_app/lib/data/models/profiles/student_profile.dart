@@ -16,6 +16,7 @@ class StudentProfile {
   final String? schoolApprovalStatus;
   final bool? isActive;
   final String? accessLevel;
+  final String? permitType; // 'A', 'B', or 'C'
 
   const StudentProfile({
     required this.id,
@@ -31,6 +32,7 @@ class StudentProfile {
     this.schoolApprovalStatus,
     this.isActive,
     this.accessLevel,
+    this.permitType,
   });
 
   // ---------- FROM JSON ----------
@@ -55,6 +57,7 @@ class StudentProfile {
       schoolApprovalStatus: json['school_approval_status'],
       isActive: json['is_active'],
       accessLevel: json['access_level'],
+      permitType: json['permit_type'],
     );
   }
 
@@ -74,6 +77,7 @@ class StudentProfile {
       'school_approval_status': schoolApprovalStatus,
       'is_active': isActive,
       'access_level': accessLevel,
+      'permit_type': permitType,
     };
   }
 

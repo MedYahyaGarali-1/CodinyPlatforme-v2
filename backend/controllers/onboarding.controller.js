@@ -400,11 +400,66 @@ async function changeAccessMethod(req, res) {
   }
 }
 
+/**
+ * POST /api/students/onboarding/choose-permit
+ * Student chooses permit type (A, B, or C)
+ */
+async function choosePermitType(req, res) {
+  try {
+    const userId = req.user.id;
+    const { permit_type } = req.body;
+
+    // Validate permit type
+    if (!['A', 'B', 'C'].includes(permit_type)) {
+      return res.status(400).json({ 
+        error: 'Invalid permit type',
+        message: 'Must be "A", "B", or "C"'
+      });
+    }
+
+    // Get current student
+    const studentResult = await pool.query(
+      'SELECT * FROM students WHERE user_id = $1',
+      [userId]
+    );
+
+    if (studentResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Student profile not found' });
+    }
+
+    // Update student with permit type
+    await pool.query(
+      `UPDATE students 
+       SET permit_type = $1,
+           onboarding_complete = TRUE
+       WHERE user_id = $2`,
+      [permit_type, userId]
+    );
+
+    let info = '';
+    if (permit_type === 'B') {
+      info = 'Permit B selected! Full content available once your school approves.';
+    } else {
+      info = `Permit ${permit_type} selected! Content coming soon.`;
+    }
+
+    res.json({
+      message: 'Permit type selected successfully',
+      permit_type,
+      info
+    });
+  } catch (err) {
+    console.error('Choose permit type error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
 module.exports = {
   chooseAccessMethod,
   linkSchool,
   completePayment,
   getAccessStatus,
   getSchoolRequestStatus,
-  changeAccessMethod
+  changeAccessMethod,
+  choosePermitType
 };

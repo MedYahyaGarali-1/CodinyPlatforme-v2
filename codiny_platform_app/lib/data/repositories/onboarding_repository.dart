@@ -139,4 +139,27 @@ class OnboardingRepository {
       throw Exception('Failed to change access method: ${response.body}');
     }
   }
+
+  /// Choose permit type (A, B, or C)
+  Future<Map<String, dynamic>> choosePermitType({
+    required String token,
+    required String permitType, // 'A', 'B', or 'C'
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/students/onboarding/choose-permit'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'permit_type': permitType,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to choose permit type: ${response.body}');
+    }
+  }
 }

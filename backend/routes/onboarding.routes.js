@@ -23,6 +23,12 @@ router.post(
 );
 
 router.post(
+  '/onboarding/choose-permit',
+  authMiddleware,
+  onboardingController.choosePermitType
+);
+
+router.post(
   '/change-access-method',
   authMiddleware,
   onboardingController.changeAccessMethod
