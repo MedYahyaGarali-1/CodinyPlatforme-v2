@@ -81,6 +81,7 @@ async function approveStudent(req, res) {
       `
       UPDATE students
       SET 
+        student_type = 'attached_to_school',
         school_approval_status = 'approved',
         school_approved_at = CURRENT_TIMESTAMP,
         is_active = TRUE,
