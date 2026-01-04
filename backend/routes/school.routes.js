@@ -183,7 +183,7 @@ router.get('/students', auth, async (req, res) => {
 
 /**
  * POST /schools/students/attach
- * Attach an existing student to this school (Option 1B)
+ * Attach and activate an existing student to this school
  * body: { studentId }
  */
 router.post('/students/attach', auth, async (req, res) => {
@@ -194,16 +194,41 @@ router.post('/students/attach', auth, async (req, res) => {
     const school = await requireSchool(req, res);
     if (!school) return;
 
+    // Set up 30-day subscription
+    const start = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 30);
+
+    // Update student: attach to school, activate, give full access
     const update = await pool.query(
-      'UPDATE students SET school_id = $1 WHERE id = $2 RETURNING id',
-      [school.id, studentId]
+      `UPDATE students 
+       SET school_id = $1,
+           student_type = 'attached_to_school',
+           is_active = TRUE,
+           access_level = 'full',
+           subscription_start = $2,
+           subscription_end = $3,
+           school_approved_at = CURRENT_TIMESTAMP
+       WHERE id = $4 
+       RETURNING id`,
+      [school.id, start, end, studentId]
     );
 
     if (!update.rowCount) {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    res.json({ message: 'Student attached to school', studentId });
+    // Update school finance
+    await pool.query(
+      `UPDATE schools
+       SET total_students = total_students + 1,
+           total_earned = total_earned + 20,
+           total_owed_to_platform = total_owed_to_platform + 30
+       WHERE id = $1`,
+      [school.id]
+    );
+
+    res.json({ message: 'Student activated successfully', studentId });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Failed to attach student', error: e.message });
