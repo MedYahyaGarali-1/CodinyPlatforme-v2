@@ -8,6 +8,7 @@ import '../../../data/models/exam/exam_models.dart';
 import '../../../data/repositories/school_repository.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
+import 'school_exam_review_screen.dart';
 
 class StudentProgressDetailScreen extends StatefulWidget {
   final SchoolStudent student;
@@ -342,6 +343,31 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                                         backgroundColor: colorScheme.surfaceVariant,
                                         valueColor: AlwaysStoppedAnimation<Color>(
                                           isPassed ? Colors.green : Colors.orange,
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    const SizedBox(height: 12),
+                                    
+                                    // View Details Button
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => SchoolExamReviewScreen(
+                                                student: widget.student,
+                                                examId: exam.id,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.visibility, size: 18),
+                                        label: const Text('View Answers & Mistakes'),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
                                         ),
                                       ),
                                     ),

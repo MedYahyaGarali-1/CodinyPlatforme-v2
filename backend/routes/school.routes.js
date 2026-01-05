@@ -529,6 +529,103 @@ router.get('/students/:studentId/exams', auth, async (req, res) => {
   }
 });
 
+/**
+ * GET /schools/students/:studentId/exams/:examId/details
+ * Get detailed answers for a specific exam (school access only)
+ * Shows all questions, student answers, correct answers, and explanations
+ */
+router.get('/students/:studentId/exams/:examId/details', auth, async (req, res) => {
+  try {
+    const { studentId, examId } = req.params;
+    const userId = req.user.id;
+
+    // 1️⃣ Verify this user is a school
+    const schoolResult = await pool.query(
+      'SELECT id FROM schools WHERE user_id = $1',
+      [userId]
+    );
+
+    if (!schoolResult.rowCount) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'Not a school account' 
+      });
+    }
+
+    const schoolId = schoolResult.rows[0].id;
+
+    // 2️⃣ Verify student belongs to this school
+    const studentCheck = await pool.query(
+      'SELECT id, school_id FROM students WHERE id = $1',
+      [studentId]
+    );
+
+    if (!studentCheck.rowCount) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Student not found' 
+      });
+    }
+
+    const student = studentCheck.rows[0];
+    if (student.school_id !== schoolId) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'This student does not belong to your school' 
+      });
+    }
+
+    // 3️⃣ Verify exam belongs to this student
+    const examCheck = await pool.query(
+      `SELECT id, started_at, completed_at, total_questions, correct_answers, 
+              wrong_answers, score, passed, time_taken_seconds
+       FROM exam_sessions 
+       WHERE id = $1 AND student_id = $2 AND completed_at IS NOT NULL`,
+      [examId, studentId]
+    );
+
+    if (!examCheck.rowCount) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Exam not found or not completed' 
+      });
+    }
+
+    // 4️⃣ Get all answers with question details
+    const answersResult = await pool.query(`
+      SELECT 
+        ea.id,
+        ea.student_answer,
+        ea.is_correct,
+        ea.answered_at,
+        eq.question_number,
+        eq.question_text,
+        eq.image_url,
+        eq.option_a,
+        eq.option_b,
+        eq.option_c,
+        eq.correct_answer,
+        eq.explanation
+      FROM exam_answers ea
+      JOIN exam_questions eq ON ea.question_id = eq.id
+      WHERE ea.exam_session_id = $1
+      ORDER BY eq.question_number
+    `, [examId]);
+
+    res.json({
+      success: true,
+      exam: examCheck.rows[0],
+      answers: answersResult.rows
+    });
+  } catch (error) {
+    console.error('Error fetching exam details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch exam details'
+    });
+  }
+});
+
 module.exports = router;
 
 

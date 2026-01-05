@@ -44,6 +44,24 @@ class SchoolRepository {
     throw Exception('Failed to fetch student exam history');
   }
 
+  Future<Map<String, dynamic>> getStudentExamDetails({
+    required String token,
+    required String studentId,
+    required String examId,
+  }) async {
+    final res = await _api.get(
+      '/schools/students/$studentId/exams/$examId/details',
+      token: token,
+    );
+    if (res is Map && res['success'] == true) {
+      return {
+        'exam': res['exam'],
+        'answers': res['answers'] as List,
+      };
+    }
+    throw Exception('Failed to fetch exam details');
+  }
+
   Future<List<StudentEvent>> getStudentEvents({required String token, required String studentId}) async {
     final res = await _api.get('/schools/students/$studentId/events', token: token);
     if (res is List) {
