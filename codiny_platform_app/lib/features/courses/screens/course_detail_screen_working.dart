@@ -69,7 +69,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pushReplacementNamed('/student'),
         ),
         title: Text(
           widget.course.title,
