@@ -83,7 +83,14 @@ class AccessGuard extends StatelessWidget {
     if (token == null) throw Exception('Not authenticated');
 
     final repo = OnboardingRepository(baseUrl: Environment.baseUrl);
-    return await repo.getAccessStatus(token: token);
+    
+    // Add timeout to prevent infinite loading
+    return await repo.getAccessStatus(token: token).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        throw Exception('Access check timed out. Please check your connection.');
+      },
+    );
   }
 
   Widget _buildAccessDeniedScreen(BuildContext context, StudentAccess access) {
