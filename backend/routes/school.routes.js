@@ -454,6 +454,81 @@ router.get('/:schoolId/revenue', auth, async (req, res) => {
 // ==========================
 router.get('/:schoolId/exam-stats', auth, examController.getSchoolExamStats);
 
+/**
+ * GET /schools/students/:studentId/exams
+ * Get exam history for a specific student (school access only)
+ */
+router.get('/students/:studentId/exams', auth, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const userId = req.user.id;
+
+    // 1️⃣ Verify this user is a school
+    const schoolResult = await pool.query(
+      'SELECT id FROM schools WHERE user_id = $1',
+      [userId]
+    );
+
+    if (!schoolResult.rowCount) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'Not a school account' 
+      });
+    }
+
+    const schoolId = schoolResult.rows[0].id;
+
+    // 2️⃣ Verify student belongs to this school
+    const studentCheck = await pool.query(
+      'SELECT id, school_id FROM students WHERE id = $1',
+      [studentId]
+    );
+
+    if (!studentCheck.rowCount) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Student not found' 
+      });
+    }
+
+    const student = studentCheck.rows[0];
+    if (student.school_id !== schoolId) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'This student does not belong to your school' 
+      });
+    }
+
+    // 3️⃣ Get student's completed exam sessions
+    const examsResult = await pool.query(`
+      SELECT 
+        id,
+        started_at,
+        completed_at,
+        total_questions,
+        correct_answers,
+        wrong_answers,
+        score,
+        passed,
+        time_taken_seconds
+      FROM exam_sessions
+      WHERE student_id = $1 AND completed_at IS NOT NULL
+      ORDER BY completed_at DESC
+    `, [studentId]);
+
+    res.json({
+      success: true,
+      exams: examsResult.rows
+    });
+  } catch (error) {
+    console.error('Error fetching student exams:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch student exam history'
+    });
+  }
+});
+
 module.exports = router;
 
 

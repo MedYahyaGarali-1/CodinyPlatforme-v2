@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../state/session/session_controller.dart';
 import '../../../data/models/school/school_student.dart';
 import '../../../data/models/exam/exam_models.dart';
+import '../../../data/repositories/school_repository.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
 
@@ -21,6 +22,7 @@ class StudentProgressDetailScreen extends StatefulWidget {
 }
 
 class _StudentProgressDetailScreenState extends State<StudentProgressDetailScreen> {
+  final SchoolRepository _schoolRepo = SchoolRepository();
   late Future<List<ExamResult>> _future;
 
   @override
@@ -34,11 +36,13 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
     if (token == null) throw Exception('Not authenticated');
     
     try {
-      // For now, return empty list as we need school-specific API endpoint
-      // TODO: Implement backend endpoint to get student exam history by student ID
-      return [];
+      return await _schoolRepo.getStudentExamHistory(
+        token: token,
+        studentId: widget.student.id.toString(),
+      );
     } catch (e) {
-      return [];
+      print('Error loading student exams: $e');
+      rethrow;
     }
   }
 
