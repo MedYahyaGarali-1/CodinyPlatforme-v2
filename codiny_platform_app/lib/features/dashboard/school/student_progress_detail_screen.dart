@@ -172,7 +172,7 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                               child: _buildStatCard(
                                 context,
                                 label: 'Average Score',
-                                value: '${(averageScore * 100).toStringAsFixed(1)}%',
+                                value: '${averageScore.toStringAsFixed(1)}%',
                                 icon: Icons.trending_up,
                               ),
                             ),
