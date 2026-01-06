@@ -1,6 +1,7 @@
 import '../services/api_service.dart';
 import '../models/school/school_student.dart';
 import '../models/school/student_event.dart';
+import '../models/exam/exam_models.dart';
 
 class SchoolRepository {
   final ApiService _api;
@@ -28,6 +29,17 @@ class SchoolRepository {
       '/schools/students/$studentId/detach',
       token: token,
     );
+  }
+
+  Future<List<ExamResult>> getStudentExams({required String token, required String studentId}) async {
+    final res = await _api.get('/schools/students/$studentId/exams', token: token);
+    
+    if (res is Map && res['success'] == true && res['exams'] is List) {
+      final exams = res['exams'] as List;
+      return exams.map((e) => ExamResult.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    
+    throw Exception('Unexpected response from /schools/students/$studentId/exams: $res');
   }
 
   Future<List<StudentEvent>> getStudentEvents({required String token, required String studentId}) async {

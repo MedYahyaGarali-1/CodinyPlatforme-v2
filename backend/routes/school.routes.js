@@ -454,6 +454,51 @@ router.get('/:schoolId/revenue', auth, async (req, res) => {
 // ==========================
 router.get('/:schoolId/exam-stats', auth, examController.getSchoolExamStats);
 
+// ==========================
+// 📝 STUDENT EXAM HISTORY FOR SCHOOLS
+// ==========================
+// GET /schools/students/:id/exams
+router.get('/students/:id/exams', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const school = await requireSchool(req, res);
+    if (!school) return;
+
+    // Ensure student belongs to this school
+    const ownership = await pool.query('SELECT id FROM students WHERE id = $1 AND school_id = $2', [id, school.id]);
+    if (!ownership.rowCount) {
+      return res.status(404).json({ message: 'Student not found or not attached to this school' });
+    }
+
+    // Get student's exam history
+    const { rows } = await pool.query(
+      `
+      SELECT 
+        id,
+        started_at,
+        completed_at,
+        total_questions,
+        correct_answers,
+        wrong_answers,
+        score,
+        passed,
+        time_taken_seconds
+      FROM exam_sessions
+      WHERE student_id = $1
+        AND completed_at IS NOT NULL
+        AND score IS NOT NULL
+      ORDER BY started_at DESC
+      `,
+      [id]
+    );
+
+    res.json({ success: true, exams: rows });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to load student exams', error: e.message });
+  }
+});
+
 module.exports = router;
 
 
