@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../data/repositories/school_repository.dart';
 import '../../../data/models/exam/exam_models.dart';
@@ -330,26 +331,56 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
                 Text(
                   answer.questionText,
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    height: 1.5,
                   ),
                 ),
 
                 // Question image if available
                 if (answer.imageUrl != null && answer.imageUrl!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      answer.imageUrl!,
-                      height: 200,
+                    child: CachedNetworkImage(
+                      imageUrl: answer.imageUrl!,
+                      height: 250,
                       width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        height: 200,
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.broken_image, size: 48),
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) => Container(
+                        height: 250,
+                        color: Colors.grey.shade100,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image_outlined,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Image not available',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -369,42 +400,56 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
                 // Summary
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300, width: 1.5),
                   ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.person, size: 18, color: Colors.blue),
+                          Icon(Icons.person, size: 20, color: Colors.blue.shade700),
                           const SizedBox(width: 8),
-                          const Text('Student answered: ', style: TextStyle(fontSize: 14)),
+                          const Text(
+                            'Student answered: ',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                           Text(
                             answer.studentAnswer.isNotEmpty ? answer.studentAnswer : 'No answer',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isCorrect ? Colors.green : Colors.red,
-                              fontSize: 14,
+                              color: isCorrect ? Colors.green.shade700 : Colors.red.shade700,
+                              fontSize: 16,
                             ),
                           ),
                         ],
                       ),
                       if (!isCorrect) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
-                            const Icon(Icons.check, size: 18, color: Colors.green),
+                            Icon(Icons.check_circle, size: 20, color: Colors.green.shade700),
                             const SizedBox(width: 8),
-                            const Text('Correct answer: ', style: TextStyle(fontSize: 14)),
+                            const Text(
+                              'Correct answer: ',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                             Text(
                               answer.correctAnswer,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                                fontSize: 14,
+                                color: Colors.green.shade700,
+                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -431,31 +476,31 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
     Color? iconColor;
 
     if (isCorrectAnswer) {
-      bgColor = Colors.green.shade100;
-      borderColor = Colors.green;
+      bgColor = Colors.green.shade50;
+      borderColor = Colors.green.shade600;
       icon = Icons.check_circle;
-      iconColor = Colors.green;
+      iconColor = Colors.green.shade700;
     }
     
     if (isStudentAnswer && !isCorrectAnswer) {
-      bgColor = Colors.red.shade100;
-      borderColor = Colors.red;
+      bgColor = Colors.red.shade50;
+      borderColor = Colors.red.shade600;
       icon = Icons.cancel;
-      iconColor = Colors.red;
+      iconColor = Colors.red.shade700;
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor, width: 2),
       ),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: borderColor,
               shape: BoxShape.circle,
@@ -466,20 +511,27 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 18,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+                height: 1.4,
+              ),
             ),
           ),
-          if (icon != null)
-            Icon(icon, color: iconColor, size: 24),
+          if (icon != null) ...[
+            const SizedBox(width: 8),
+            Icon(icon, color: iconColor, size: 26),
+          ],
         ],
       ),
     );
