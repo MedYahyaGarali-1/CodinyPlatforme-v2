@@ -323,8 +323,12 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +336,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                     Icon(
                       Icons.notes,
                       size: 16,
-                      color: isPast ? Colors.grey.shade600 : Colors.grey.shade800,
+                      color: isPast ? Colors.grey.shade600 : Colors.white.withOpacity(0.9),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -340,7 +344,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                         event.notes!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isPast ? Colors.grey.shade600 : Colors.grey.shade800,
+                          color: isPast ? Colors.grey.shade600 : Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ),
