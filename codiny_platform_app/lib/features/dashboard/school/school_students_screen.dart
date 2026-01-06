@@ -48,6 +48,54 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen> {
     }
   }
 
+  Future<void> _removeStudent(SchoolStudent student) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Student'),
+        content: Text(
+          'Are you sure you want to remove "${student.name}" from your school?\n\n'
+          'This will:\n'
+          '• Remove their association with your school\n'
+          '• They will lose access to courses and materials\n'
+          '• Their exam history will be preserved',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final token = context.read<SessionController>().token;
+      if (token == null) throw Exception('Not authenticated');
+
+      await _repo.detachStudent(token: token, studentId: student.id.toString());
+
+      if (mounted) {
+        SnackBarHelper.showSuccess(context, 'Student removed successfully');
+        _refresh();
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarHelper.showError(context, 'Failed to remove student: ${e.toString()}');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,6 +245,13 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen> {
                                 ),
                               ],
                             ),
+                          ),
+                          // Remove button
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            color: Colors.red,
+                            tooltip: 'Remove student',
+                            onPressed: () => _removeStudent(st),
                           ),
                           Icon(
                             Icons.chevron_right,
