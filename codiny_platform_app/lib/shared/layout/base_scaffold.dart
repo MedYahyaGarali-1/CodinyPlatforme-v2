@@ -5,6 +5,7 @@ class BaseScaffold extends StatelessWidget {
   final Widget body;
   final List<Widget>? actions;
   final Widget? floatingActionButton;
+  final bool showBackButton;
 
   const BaseScaffold({
     super.key,
@@ -12,6 +13,7 @@ class BaseScaffold extends StatelessWidget {
     required this.body,
     this.actions,
     this.floatingActionButton,
+    this.showBackButton = true, // Default to showing back button
   });
 
   @override
@@ -20,6 +22,7 @@ class BaseScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         actions: actions,
+        automaticallyImplyLeading: showBackButton,
       ),
       floatingActionButton: floatingActionButton,
       body: Padding(

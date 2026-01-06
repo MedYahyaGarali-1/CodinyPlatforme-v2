@@ -47,6 +47,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     return BaseScaffold(
       title: 'Admin Dashboard',
+      showBackButton: false, // Dashboard screen - no back button
       actions: [
         IconButton(
           tooltip: 'Toggle theme',

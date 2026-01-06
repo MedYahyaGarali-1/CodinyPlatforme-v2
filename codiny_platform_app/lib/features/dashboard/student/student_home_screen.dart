@@ -30,6 +30,7 @@ class StudentHomeScreen extends StatelessWidget {
 
     return BaseScaffold(
       title: 'Dashboard',
+      showBackButton: false, // Dashboard screen - no back button
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

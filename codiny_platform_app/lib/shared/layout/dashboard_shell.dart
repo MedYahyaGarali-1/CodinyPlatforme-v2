@@ -51,6 +51,7 @@ class DashboardShellState extends State<DashboardShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(tab.label),
+        automaticallyImplyLeading: false, // Dashboard - no back button
         actions: [
           if (widget.showThemeToggle)
             IconButton(
