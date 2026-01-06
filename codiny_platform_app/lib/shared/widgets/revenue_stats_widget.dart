@@ -29,6 +29,8 @@ class _RevenueStatsWidgetState extends State<RevenueStatsWidget> {
   }
 
   Future<void> _loadStats() async {
+    if (!mounted) return; // Check if widget is still mounted
+    
     setState(() {
       _isLoading = true;
       _error = null;
@@ -47,6 +49,8 @@ class _RevenueStatsWidgetState extends State<RevenueStatsWidget> {
         },
       );
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (response.statusCode == 200) {
         setState(() {
           _stats = json.decode(response.body);
@@ -59,6 +63,8 @@ class _RevenueStatsWidgetState extends State<RevenueStatsWidget> {
         });
       }
     } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+      
       setState(() {
         _error = 'Error: $e';
         _isLoading = false;

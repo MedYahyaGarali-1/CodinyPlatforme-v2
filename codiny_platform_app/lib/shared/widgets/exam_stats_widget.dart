@@ -47,6 +47,8 @@ class _ExamStatsWidgetState extends State<ExamStatsWidget> {
         },
       );
 
+      if (!mounted) return; // Check if widget is still mounted
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -60,6 +62,8 @@ class _ExamStatsWidgetState extends State<ExamStatsWidget> {
         });
       }
     } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+      
       setState(() {
         _error = 'Error: $e';
         _isLoading = false;
