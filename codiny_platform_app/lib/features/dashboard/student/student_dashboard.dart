@@ -43,14 +43,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
       try {
         final accessStatus = await onboardingRepo.getAccessStatus(token: session.token!);
         
-        setState(() {
-          _needsOnboarding = !accessStatus.student.onboardingComplete;
-          _isCheckingOnboarding = false;
-        });
+        if (mounted) {
+          setState(() {
+            _needsOnboarding = !accessStatus.student.onboardingComplete;
+            _isCheckingOnboarding = false;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _isCheckingOnboarding = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isCheckingOnboarding = false;
+          });
+        }
       }
     });
   }

@@ -42,6 +42,24 @@ class SchoolRepository {
     throw Exception('Unexpected response from /schools/students/$studentId/exams: $res');
   }
 
+  Future<List<ExamDetailedAnswer>> getExamAnswers({
+    required String token,
+    required String studentId,
+    required String examId,
+  }) async {
+    final res = await _api.get(
+      '/schools/students/$studentId/exams/$examId/answers',
+      token: token,
+    );
+    
+    if (res is Map && res['success'] == true && res['answers'] is List) {
+      final answers = res['answers'] as List;
+      return answers.map((e) => ExamDetailedAnswer.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    
+    throw Exception('Unexpected response from /schools/students/$studentId/exams/$examId/answers: $res');
+  }
+
   Future<List<StudentEvent>> getStudentEvents({required String token, required String studentId}) async {
     final res = await _api.get('/schools/students/$studentId/events', token: token);
     if (res is List) {

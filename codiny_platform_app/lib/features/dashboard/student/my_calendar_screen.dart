@@ -170,10 +170,10 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
       color = Colors.orange;
     } else if (eventDate.isBefore(today)) {
       label = DateFormat('EEEE, MMMM d').format(date);
-      color = Colors.grey;
+      color = Colors.grey.shade400;
     } else {
       label = DateFormat('EEEE, MMMM d').format(date);
-      color = Colors.black87;
+      color = Colors.white;
     }
 
     return Padding(
@@ -250,7 +250,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isPast ? Colors.grey.shade700 : Colors.black87,
+                          color: isPast ? Colors.grey.shade700 : Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -259,14 +259,14 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                           Icon(
                             Icons.access_time,
                             size: 16,
-                            color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                            color: isPast ? Colors.grey.shade600 : Colors.white70,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _formatTimeRange(event),
                             style: TextStyle(
                               fontSize: 14,
-                              color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                              color: isPast ? Colors.grey.shade600 : Colors.white70,
                             ),
                           ),
                         ],
@@ -301,7 +301,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                   Icon(
                     Icons.location_on,
                     size: 16,
-                    color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                    color: isPast ? Colors.grey.shade600 : Colors.white70,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -309,7 +309,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                       event.location!,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                        color: isPast ? Colors.grey.shade600 : Colors.white70,
                       ),
                     ),
                   ),
@@ -332,7 +332,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                     Icon(
                       Icons.notes,
                       size: 16,
-                      color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                      color: isPast ? Colors.grey.shade600 : Colors.grey.shade800,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -340,7 +340,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                         event.notes!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isPast ? Colors.grey.shade600 : Colors.grey.shade700,
+                          color: isPast ? Colors.grey.shade600 : Colors.grey.shade800,
                         ),
                       ),
                     ),

@@ -80,9 +80,11 @@ class _SchoolHomeLoaderState extends State<_SchoolHomeLoader> {
           earned: profile?.earned ?? 0,
           owed: profile?.owed ?? 0,
           onRefresh: () {
-            setState(() {
-              _load = _loadProfile();
-            });
+            if (mounted) {
+              setState(() {
+                _load = _loadProfile();
+              });
+            }
           },
         );
       },

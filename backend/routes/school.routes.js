@@ -499,6 +499,54 @@ router.get('/students/:id/exams', auth, async (req, res) => {
   }
 });
 
+// ==========================
+// 📋 DETAILED EXAM ANSWERS FOR SCHOOLS
+// ==========================
+// GET /schools/students/:studentId/exams/:examId/answers
+router.get('/students/:studentId/exams/:examId/answers', auth, async (req, res) => {
+  try {
+    const { studentId, examId } = req.params;
+    const school = await requireSchool(req, res);
+    if (!school) return;
+
+    // Ensure student belongs to this school
+    const ownership = await pool.query('SELECT id FROM students WHERE id = $1 AND school_id = $2', [studentId, school.id]);
+    if (!ownership.rowCount) {
+      return res.status(404).json({ message: 'Student not found or not attached to this school' });
+    }
+
+    // Get detailed exam answers with question details
+    const { rows } = await pool.query(
+      `
+      SELECT 
+        ea.id,
+        ea.question_id,
+        ea.student_answer,
+        ea.is_correct,
+        ea.answered_at,
+        eq.question_number,
+        eq.question_text,
+        eq.image_url,
+        eq.option_a,
+        eq.option_b,
+        eq.option_c,
+        eq.correct_answer,
+        eq.category
+      FROM exam_answers ea
+      INNER JOIN exam_questions eq ON ea.question_id = eq.id
+      WHERE ea.exam_session_id = $1
+      ORDER BY eq.question_number ASC
+      `,
+      [examId]
+    );
+
+    res.json({ success: true, answers: rows });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to load exam answers', error: e.message });
+  }
+});
+
 module.exports = router;
 
 

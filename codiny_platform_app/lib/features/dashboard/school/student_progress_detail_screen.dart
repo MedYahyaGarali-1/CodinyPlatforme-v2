@@ -8,6 +8,7 @@ import '../../../data/models/exam/exam_models.dart';
 import '../../../data/repositories/school_repository.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
+import 'exam_answers_detail_screen.dart';
 
 class StudentProgressDetailScreen extends StatefulWidget {
   final SchoolStudent student;
@@ -171,7 +172,7 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                               child: _buildStatCard(
                                 context,
                                 label: 'Average Score',
-                                value: '${(averageScore * 100).toStringAsFixed(1)}%',
+                                value: '${averageScore.toStringAsFixed(1)}%',
                                 icon: Icons.trending_up,
                               ),
                             ),
@@ -342,6 +343,31 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                                         backgroundColor: colorScheme.surfaceVariant,
                                         valueColor: AlwaysStoppedAnimation<Color>(
                                           isPassed ? Colors.green : Colors.orange,
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    const SizedBox(height: 12),
+                                    
+                                    // View Answers Button
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ExamAnswersDetailScreen(
+                                                student: widget.student,
+                                                exam: exam,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.visibility, size: 18),
+                                        label: const Text('View Detailed Answers'),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          side: BorderSide(color: colorScheme.primary),
                                         ),
                                       ),
                                     ),
