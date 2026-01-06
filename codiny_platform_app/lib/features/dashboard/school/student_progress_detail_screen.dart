@@ -5,10 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../state/session/session_controller.dart';
 import '../../../data/models/school/school_student.dart';
 import '../../../data/models/exam/exam_models.dart';
-import '../../../data/repositories/school_repository.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
-import 'school_exam_review_screen.dart';
 
 class StudentProgressDetailScreen extends StatefulWidget {
   final SchoolStudent student;
@@ -23,7 +21,6 @@ class StudentProgressDetailScreen extends StatefulWidget {
 }
 
 class _StudentProgressDetailScreenState extends State<StudentProgressDetailScreen> {
-  final SchoolRepository _schoolRepo = SchoolRepository();
   late Future<List<ExamResult>> _future;
 
   @override
@@ -37,13 +34,11 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
     if (token == null) throw Exception('Not authenticated');
     
     try {
-      return await _schoolRepo.getStudentExamHistory(
-        token: token,
-        studentId: widget.student.id.toString(),
-      );
+      // For now, return empty list as we need school-specific API endpoint
+      // TODO: Implement backend endpoint to get student exam history by student ID
+      return [];
     } catch (e) {
-      print('Error loading student exams: $e');
-      rethrow;
+      return [];
     }
   }
 
@@ -172,7 +167,7 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                               child: _buildStatCard(
                                 context,
                                 label: 'Average Score',
-                                value: '${averageScore.toStringAsFixed(1)}%',
+                                value: '${(averageScore * 100).toStringAsFixed(1)}%',
                                 icon: Icons.trending_up,
                               ),
                             ),
@@ -343,31 +338,6 @@ class _StudentProgressDetailScreenState extends State<StudentProgressDetailScree
                                         backgroundColor: colorScheme.surfaceVariant,
                                         valueColor: AlwaysStoppedAnimation<Color>(
                                           isPassed ? Colors.green : Colors.orange,
-                                        ),
-                                      ),
-                                    ),
-                                    
-                                    const SizedBox(height: 12),
-                                    
-                                    // View Details Button
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: OutlinedButton.icon(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => SchoolExamReviewScreen(
-                                                student: widget.student,
-                                                examId: exam.id,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        icon: const Icon(Icons.visibility, size: 18),
-                                        label: const Text('View Answers & Mistakes'),
-                                        style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
                                         ),
                                       ),
                                     ),

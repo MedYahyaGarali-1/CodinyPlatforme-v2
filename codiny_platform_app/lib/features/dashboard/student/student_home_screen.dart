@@ -7,7 +7,7 @@ import '../../../state/subscriptions/subscription_service.dart';
 import '../../../shared/layout/base_scaffold.dart';
 import '../../../shared/layout/dashboard_shell.dart';
 import '../../../shared/ui/snackbar_helper.dart';
-import '../school/student_calendars_screen.dart';
+import 'my_calendar_screen.dart';
 
 class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
@@ -205,7 +205,7 @@ class StudentHomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const StudentCalendarsScreen(),
+                        builder: (_) => const MyCalendarScreen(),
                       ),
                     );
                   } : () {

@@ -1,7 +1,6 @@
 import '../services/api_service.dart';
 import '../models/school/school_student.dart';
 import '../models/school/student_event.dart';
-import '../models/exam/exam_models.dart';
 
 class SchoolRepository {
   final ApiService _api;
@@ -29,37 +28,6 @@ class SchoolRepository {
       '/schools/students/$studentId/detach',
       token: token,
     );
-  }
-
-  Future<List<ExamResult>> getStudentExamHistory({
-    required String token,
-    required String studentId,
-  }) async {
-    final res = await _api.get('/schools/students/$studentId/exams', token: token);
-    if (res is Map && res['success'] == true && res['exams'] is List) {
-      return (res['exams'] as List)
-          .map((e) => ExamResult.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-    }
-    throw Exception('Failed to fetch student exam history');
-  }
-
-  Future<Map<String, dynamic>> getStudentExamDetails({
-    required String token,
-    required String studentId,
-    required String examId,
-  }) async {
-    final res = await _api.get(
-      '/schools/students/$studentId/exams/$examId/details',
-      token: token,
-    );
-    if (res is Map && res['success'] == true) {
-      return {
-        'exam': res['exam'],
-        'answers': res['answers'] as List,
-      };
-    }
-    throw Exception('Failed to fetch exam details');
   }
 
   Future<List<StudentEvent>> getStudentEvents({required String token, required String studentId}) async {
