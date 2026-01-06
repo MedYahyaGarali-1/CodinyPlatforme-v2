@@ -35,12 +35,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       });
 
       // Load PDF from assets
-      final ByteData data = await rootBundle.load('assets/courses/${widget.course.fileName}');
+      final ByteData data = await rootBundle.load(widget.course.pdfPath);
       final bytes = data.buffer.asUint8List();
 
       // Get temporary directory
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${widget.course.fileName}');
+      final file = File('${dir.path}/${widget.course.pdfPath.split('/').last}');
 
       // Write PDF to temporary file
       await file.writeAsBytes(bytes);
@@ -170,9 +170,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Widget _buildErrorState() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),

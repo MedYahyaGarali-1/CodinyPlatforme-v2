@@ -135,13 +135,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   Widget _buildCourseHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecradient(
-        colors: [
-          const Color(0xFF6C63FF),
-          const Color(0xFF6C63FF).withOpacity(0.7),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF6C63FF),
+            const Color(0xFF6C63FF).withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: SafeArea(
         bottom: false,

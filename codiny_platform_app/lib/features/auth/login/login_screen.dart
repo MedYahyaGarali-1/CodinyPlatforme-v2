@@ -104,9 +104,11 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    
     return AuthScaffold(
-      title: 'Welcome Back!',
-      subtitle: 'Login to continue',
+      title: 'Welcome Back! 👋',
+      subtitle: 'Login to continue your learning journey',
       illustration: 'assets/illustrations/logo.png',
       child: FadeTransition(
         opacity: _fade,
@@ -116,78 +118,255 @@ class _LoginScreenState extends State<LoginScreen>
             key: _formKey,
             child: Column(
               children: [
-                // 📧 Email / Phone
-                TextFormField(
-                  controller: _identifierController,
-                  validator: Validators.emailOrPhone,
-                  decoration: const InputDecoration(
-                    hintText: 'Email or phone',
-                    prefixIcon: Icon(Icons.person_outline),
+                // 📧 Email / Phone - Enhanced
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: cs.outline.withOpacity(0.1),
+                    ),
+                  ),
+                  child: TextFormField(
+                    controller: _identifierController,
+                    validator: Validators.emailOrPhone,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: cs.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Email or phone number',
+                      hintStyle: TextStyle(
+                        color: cs.onSurface.withOpacity(0.5),
+                        fontWeight: FontWeight.w400,
+                      ),
+                      prefixIcon: Container(
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              cs.primary.withOpacity(0.1),
+                              cs.primary.withOpacity(0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          color: cs.primary,
+                          size: 20,
+                        ),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 18,
+                      ),
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 16),
 
-                // 🔑 Password
-                TextFormField(
-                  controller: _passwordController,
-                  validator: Validators.password,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock_outline),
+                // 🔑 Password - Enhanced
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: cs.outline.withOpacity(0.1),
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 🔘 Login button
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: AnimatedScale(
-                    scale: _loading ? 0.98 : 1,
-                    duration: const Duration(milliseconds: 150),
-                    child: FilledButton(
-                      onPressed: _loading ? null : _login,
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: TextFormField(
+                    controller: _passwordController,
+                    validator: Validators.password,
+                    obscureText: true,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: cs.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      hintStyle: TextStyle(
+                        color: cs.onSurface.withOpacity(0.5),
+                        fontWeight: FontWeight.w400,
+                      ),
+                      prefixIcon: Container(
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              cs.primary.withOpacity(0.1),
+                              cs.primary.withOpacity(0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          color: cs.primary,
+                          size: 20,
                         ),
                       ),
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 18,
+                      ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 28),
 
-                // ➕ Create account
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterScreen(),
+                // 🔘 Login button - Enhanced with gradient
+                Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        cs.primary,
+                        cs.primary.withOpacity(0.8),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
-                    );
-                  },
-                  child: const Text('Create an account'),
+                    ],
+                  ),
+                  child: AnimatedScale(
+                    scale: _loading ? 0.98 : 1,
+                    duration: const Duration(milliseconds: 150),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _loading ? null : _login,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Center(
+                          child: _loading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.arrow_forward_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Divider with text
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: cs.outline.withOpacity(0.2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          color: cs.onSurface.withOpacity(0.5),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(
+                        color: cs.outline.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // ➕ Create account - Enhanced
+                Container(
+                  width: double.infinity,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: cs.primary.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_add_rounded,
+                              color: cs.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Create an account',
+                              style: TextStyle(
+                                color: cs.primary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
