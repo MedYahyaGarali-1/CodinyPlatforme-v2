@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../data/repositories/school_repository.dart';
 import '../../../data/models/exam/exam_models.dart';
@@ -343,44 +342,46 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
                   const SizedBox(height: 16),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: answer.imageUrl!,
+                    child: Container(
                       height: 250,
                       width: double.infinity,
-                      fit: BoxFit.contain,
-                      placeholder: (context, url) => Container(
-                        height: 250,
+                      decoration: BoxDecoration(
                         color: Colors.grey.shade100,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      errorWidget: (context, url, error) => Container(
+                      child: Image.asset(
+                        'assets/exam_images/${answer.imageUrl}',
                         height: 250,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image_outlined,
-                              size: 64,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Image not available',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image_outlined,
+                                size: 64,
+                                color: Colors.grey.shade400,
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Image not available',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                answer.imageUrl!,
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
