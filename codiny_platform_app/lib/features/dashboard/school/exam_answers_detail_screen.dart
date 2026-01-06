@@ -95,11 +95,11 @@ class _ExamAnswersDetailScreenState extends State<ExamAnswersDetailScreen> {
 
           if (answers.isEmpty) {
             return EmptyState(
-              icon: Icons.quiz_outlined,
-              title: 'No Answers Found',
-              message: 'This exam has no recorded answers.',
-              actionLabel: 'Refresh',
-              onAction: _refresh,
+              icon: Icons.history_edu_outlined,
+              title: 'No Detailed Answers Available',
+              message: 'This exam was taken before the detailed answer tracking feature was added.\n\nOnly new exams will have question-by-question details.\n\nThe student can take a new exam to see this feature in action!',
+              actionLabel: 'Go Back',
+              onAction: () => Navigator.of(context).pop(),
             );
           }
 
