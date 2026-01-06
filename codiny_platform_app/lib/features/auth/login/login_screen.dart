@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
+    print('🔐 LoginScreen initState');
 
     _controller = AnimationController(
       vsync: this,
@@ -52,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
 
     _controller.forward();
+    print('✅ LoginScreen animation started');
   }
 
   @override

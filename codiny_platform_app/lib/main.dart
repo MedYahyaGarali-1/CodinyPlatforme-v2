@@ -10,23 +10,29 @@ import 'state/theme/theme_controller.dart';
 import 'data/repositories/course_repository.dart';
 
 Future<void> main() async {
+  print('🚀 App starting...');
   WidgetsFlutterBinding.ensureInitialized();
+  print('✅ Flutter binding initialized');
 
   final session = SessionController();
+  print('✅ SessionController created');
   
   try {
+    print('⏳ Restoring session...');
     // Add timeout to prevent infinite loading
     await session.restoreSession().timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        print('Session restore timed out - continuing with fresh session');
+        print('⚠️  Session restore timed out - continuing with fresh session');
       },
     );
+    print('✅ Session restored');
   } catch (e) {
-    print('Error restoring session: $e');
+    print('❌ Error restoring session: $e');
     // Continue with fresh session
   }
 
+  print('🎨 Starting MyApp...');
   runApp(MyApp(session: session));
 }
 

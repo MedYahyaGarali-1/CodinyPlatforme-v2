@@ -17,10 +17,14 @@ class AppEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('📱 AppEntry building...');
     return Consumer<SessionController>(
       builder: (context, session, _) {
+        print('👤 Session: isLoggedIn=${session.isLoggedIn}, role=${session.role}');
+        
         // Show loading screen while checking session
         if (session.user == null && session.token == null) {
+          print('➡️  Showing LoginScreen (no user/token)');
           // Check if we're still loading or just not logged in
           // For now, assume not logged in after a brief moment
           return const LoginScreen();
@@ -28,22 +32,28 @@ class AppEntry extends StatelessWidget {
 
         // ⏳ Not logged in
         if (!session.isLoggedIn) {
+          print('➡️  Showing LoginScreen (not logged in)');
           return const LoginScreen();
         }
 
         // 🎯 Logged in → route by role
+        print('✅ User logged in, routing to dashboard...');
         switch (session.role) {
           case UserRole.student:
+            print('➡️  Showing StudentDashboard');
             return const StudentDashboard();
 
           case UserRole.school:
+            print('➡️  Showing SchoolDashboard');
             return const SchoolDashboard();
 
           case UserRole.admin:
+            print('➡️  Showing AdminDashboard');
             return const AdminDashboard();
 
           case UserRole.user:
           default:
+            print('➡️  Showing StudentDashboard (default)');
             return const StudentDashboard();
         }
       },
