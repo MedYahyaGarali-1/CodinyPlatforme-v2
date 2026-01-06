@@ -19,6 +19,13 @@ class AppEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SessionController>(
       builder: (context, session, _) {
+        // Show loading screen while checking session
+        if (session.user == null && session.token == null) {
+          // Check if we're still loading or just not logged in
+          // For now, assume not logged in after a brief moment
+          return const LoginScreen();
+        }
+
         // ⏳ Not logged in
         if (!session.isLoggedIn) {
           return const LoginScreen();

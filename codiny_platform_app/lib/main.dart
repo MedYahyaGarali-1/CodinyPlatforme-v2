@@ -13,7 +13,19 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final session = SessionController();
-  await session.restoreSession();
+  
+  try {
+    // Add timeout to prevent infinite loading
+    await session.restoreSession().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        print('Session restore timed out - continuing with fresh session');
+      },
+    );
+  } catch (e) {
+    print('Error restoring session: $e');
+    // Continue with fresh session
+  }
 
   runApp(MyApp(session: session));
 }
