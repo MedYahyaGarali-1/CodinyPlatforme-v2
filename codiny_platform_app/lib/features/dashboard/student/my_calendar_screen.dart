@@ -205,6 +205,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
   Widget _buildEventCard(StudentEvent event) {
     final now = DateTime.now();
     final isPast = event.startsAt.isBefore(now);
+    final theme = Theme.of(context);
     
     return Container(
       decoration: BoxDecoration(
@@ -212,8 +213,8 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
           colors: isPast 
               ? [Colors.grey.shade300, Colors.grey.shade400]
               : [
-                  Theme.of(context).primaryColor.withOpacity(0.1),
-                  Theme.of(context).primaryColor.withOpacity(0.05),
+                  theme.primaryColor.withOpacity(0.8),
+                  theme.primaryColor.withOpacity(0.6),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -222,9 +223,18 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
         border: Border.all(
           color: isPast 
               ? Colors.grey.shade400
-              : Theme.of(context).primaryColor.withOpacity(0.3),
-          width: 1,
+              : theme.primaryColor,
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: isPast 
+                ? Colors.grey.withOpacity(0.2)
+                : theme.primaryColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -237,7 +247,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
               children: [
                 Icon(
                   Icons.event,
-                  color: isPast ? Colors.grey.shade600 : Theme.of(context).primaryColor,
+                  color: isPast ? Colors.grey.shade700 : Colors.white,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -250,7 +260,7 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isPast ? Colors.grey.shade700 : Colors.white,
+                          color: isPast ? Colors.grey.shade800 : Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -259,14 +269,14 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
                           Icon(
                             Icons.access_time,
                             size: 16,
-                            color: isPast ? Colors.grey.shade600 : Colors.white70,
+                            color: isPast ? Colors.grey.shade700 : Colors.white.withOpacity(0.95),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _formatTimeRange(event),
                             style: TextStyle(
                               fontSize: 14,
-                              color: isPast ? Colors.grey.shade600 : Colors.white70,
+                              color: isPast ? Colors.grey.shade700 : Colors.white.withOpacity(0.95),
                             ),
                           ),
                         ],
