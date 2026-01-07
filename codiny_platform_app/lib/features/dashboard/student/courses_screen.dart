@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/ui/access_guard.dart';
+import '../../../shared/layout/dashboard_shell.dart';
 import '../../../data/repositories/course_repository.dart';
 import '../../../data/models/course_models.dart';
 import '../../courses/screens/course_detail_screen.dart';
@@ -68,9 +69,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
-              // Check if we can pop, if not, stay on current screen
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
+              // Navigate back to Home tab (index 0) in the dashboard
+              final dashboardState = DashboardShell.of(context);
+              if (dashboardState != null) {
+                dashboardState.changeTab(0);
               }
             },
           ),
