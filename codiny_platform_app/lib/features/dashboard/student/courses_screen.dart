@@ -51,7 +51,32 @@ class _CoursesScreenState extends State<CoursesScreen> {
     return AccessGuard(
       requiresFullAccess: true,
       featureName: 'courses',
-      child: _buildBody(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0A0E21),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1D1E33),
+          title: const Text(
+            'الدروس',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          centerTitle: true,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              // Check if we can pop, if not, stay on current screen
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+        ),
+        body: _buildBody(),
+      ),
     );
   }
 
