@@ -16,8 +16,15 @@ codiny_platform_app/.packages
 codiny_platform_app/.pub-cache/
 codiny_platform_app/.pub/
 codiny_platform_app/build/
+
+# Android signing keys (NEVER commit these!)
 codiny_platform_app/android/app/upload-keystore.jks
+codiny_platform_app/android/app/*.jks
+codiny_platform_app/android/app/*.keystore
 codiny_platform_app/android/key.properties
+*.jks
+*.keystore
+key.properties
 
 # IDE - VSCode
 .vscode/*

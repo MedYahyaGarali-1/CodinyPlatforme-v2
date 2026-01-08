@@ -32,7 +32,7 @@ class TrafficSignsData {
         id: '2',
         name: '50 km/h',
         arabicName: 'حد السرعة 50',
-        imagePath: 'assets/traffic_signs/50.svg',
+        imagePath: 'assets/traffic_signs/50.jpeg',
         category: 'speed',
         description: 'الحد الأقصى للسرعة 50 كم/ساعة',
       ),
