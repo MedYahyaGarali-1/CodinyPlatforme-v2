@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/ui/access_guard.dart';
+import '../../../shared/layout/dashboard_shell.dart';
 import '../../../state/session/session_controller.dart';
 import '../../../data/repositories/exam_repository.dart';
 import '../../../data/models/exam/exam_models.dart';
@@ -76,8 +77,33 @@ class _ExamsScreenState extends State<ExamsScreen> {
     return AccessGuard(
       requiresFullAccess: true,
       featureName: 'exams',
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0A0E21),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1D1E33),
+          title: const Text(
+            'Exams',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          centerTitle: true,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              // Navigate back to Home tab (index 0) in the dashboard
+              final dashboardState = DashboardShell.of(context);
+              if (dashboardState != null) {
+                dashboardState.changeTab(0);
+              }
+            },
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -253,6 +279,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                             .toList(),
                       ),
           ],
+        ),
         ),
       ),
     );
