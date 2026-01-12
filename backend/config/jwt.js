@@ -1,4 +1,4 @@
 module.exports = {
   secret: process.env.JWT_SECRET,
-  expiresIn: '1h', // 1 hour for security
+  expiresIn: '30d', // 30 days - users stay logged in for a month
 };
