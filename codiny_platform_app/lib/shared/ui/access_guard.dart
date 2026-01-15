@@ -80,7 +80,16 @@ class AccessGuard extends StatelessWidget {
 
   Future<AccessStatusResponse> _checkAccess(BuildContext context) async {
     final token = context.read<SessionController>().token;
-    if (token == null) throw Exception('Not authenticated');
+    if (token == null) {
+      // Token is null - redirect to login instead of throwing exception
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      });
+      throw Exception('Not authenticated');
+    }
 
     final repo = OnboardingRepository(baseUrl: Environment.baseUrl);
     
@@ -229,7 +238,16 @@ class AccessCheckWidget extends StatelessWidget {
 
   Future<AccessStatusResponse> _checkAccess(BuildContext context) async {
     final token = context.read<SessionController>().token;
-    if (token == null) throw Exception('Not authenticated');
+    if (token == null) {
+      // Token is null - redirect to login instead of throwing exception
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      });
+      throw Exception('Not authenticated');
+    }
 
     final repo = OnboardingRepository();
     return await repo.getAccessStatus(token: token);

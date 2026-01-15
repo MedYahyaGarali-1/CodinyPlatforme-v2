@@ -6,6 +6,7 @@ import '../../../core/utils/validators.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../shared/layout/auth_scaffold.dart';
 import '../register/register_screen.dart';
+import '../../../widgets/disclaimer_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,6 +32,11 @@ class _LoginScreenState extends State<LoginScreen>
   void initState() {
     super.initState();
     print('🔐 LoginScreen initState');
+
+    // Show disclaimer dialog on first launch
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      DisclaimerDialog.showIfNeeded(context);
+    });
 
     _controller = AnimationController(
       vsync: this,

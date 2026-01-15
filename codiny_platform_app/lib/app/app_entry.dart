@@ -12,12 +12,46 @@ import '../features/dashboard/student/student_dashboard.dart';
 import '../features/dashboard/school/school_dashboard.dart';
 import '../features/dashboard/admin/admin_dashboard.dart';
 
-class AppEntry extends StatelessWidget {
+class AppEntry extends StatefulWidget {
   const AppEntry({super.key});
 
   @override
+  State<AppEntry> createState() => _AppEntryState();
+}
+
+class _AppEntryState extends State<AppEntry> {
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    print('🔄 AppEntry initializing...');
+    // Give a brief moment for the session controller to settle
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+      print('✅ AppEntry initialized');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    print('📱 AppEntry building...');
+    print('📱 AppEntry building... initialized=$_isInitialized');
+    
+    if (!_isInitialized) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Consumer<SessionController>(
       builder: (context, session, _) {
         print('👤 Session: isLoggedIn=${session.isLoggedIn}, role=${session.role}');
@@ -25,8 +59,6 @@ class AppEntry extends StatelessWidget {
         // Show loading screen while checking session
         if (session.user == null && session.token == null) {
           print('➡️  Showing LoginScreen (no user/token)');
-          // Check if we're still loading or just not logged in
-          // For now, assume not logged in after a brief moment
           return const LoginScreen();
         }
 

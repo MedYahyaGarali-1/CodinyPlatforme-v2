@@ -66,13 +66,33 @@ class SessionController extends ChangeNotifier {
 
   // ---------- RESTORE ----------
   Future<void> restoreSession() async {
-    final token = await _storage.getToken();
-    final user = await _storage.getUser();
+    try {
+      print('🔄 Starting session restore...');
+      final token = await _storage.getToken();
+      print('📱 Token retrieved: ${token != null ? "exists" : "null"}');
+      
+      final user = await _storage.getUser();
+      print('👤 User retrieved: ${user != null ? user.name : "null"}');
 
-    if (token == null || user == null) return;
+      if (token == null || user == null) {
+        print('⚠️  No saved session found');
+        return;
+      }
 
-    _token = token;
-    _currentUser = user;
-    notifyListeners();
+      _token = token;
+      _currentUser = user;
+      print('✅ Session restored successfully');
+      notifyListeners();
+    } catch (e, stackTrace) {
+      print('❌ Error restoring session: $e');
+      print('Stack trace: $stackTrace');
+      // Clear potentially corrupted data
+      try {
+        await _storage.clear();
+        print('🧹 Cleared corrupted session data');
+      } catch (clearError) {
+        print('❌ Error clearing storage: $clearError');
+      }
+    }
   }
 }

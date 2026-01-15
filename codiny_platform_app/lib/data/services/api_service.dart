@@ -1,11 +1,29 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 import '../../core/config/environment.dart';
+import '../../main.dart';
 
 class ApiService {
   final http.Client _client = http.Client();
+
+  /// Handle authentication errors by redirecting to login
+  void _handleAuthError(int statusCode) {
+    if (statusCode == 401 || statusCode == 403) {
+      // Token expired or invalid - redirect to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
+      });
+    }
+  }
 
   Future<dynamic> post(
     String path, {
@@ -41,6 +59,9 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return decoded;
     }
+
+    // Handle authentication errors
+    _handleAuthError(response.statusCode);
 
     if (decoded is Map && decoded['message'] != null) {
       throw Exception(decoded['message']);
@@ -81,6 +102,9 @@ class ApiService {
       print('GET $uri -> body: $decoded');
       return decoded;
     }
+
+    // Handle authentication errors
+    _handleAuthError(res.statusCode);
 
     if (decoded is Map && decoded['message'] != null) {
       throw Exception(decoded['message']);
