@@ -85,5 +85,41 @@ router.get('/events', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /students/fcm-token - Save FCM token for push notifications
+router.post('/fcm-token', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { fcm_token } = req.body;
+
+    if (!fcm_token) {
+      return res.status(400).json({ message: 'fcm_token is required' });
+    }
+
+    // Get student ID
+    const studentResult = await pool.query(
+      'SELECT id FROM students WHERE user_id = $1',
+      [userId]
+    );
+
+    if (studentResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const studentId = studentResult.rows[0].id;
+
+    // Save FCM token
+    await pool.query(
+      'UPDATE students SET fcm_token = $1 WHERE id = $2',
+      [fcm_token, studentId]
+    );
+
+    console.log(`✅ FCM token saved for student ${studentId}`);
+    res.json({ message: 'FCM token saved successfully' });
+  } catch (err) {
+    console.error('Error saving FCM token:', err);
+    res.status(500).json({ message: 'Failed to save FCM token', error: err.message });
+  }
+});
+
 module.exports = router;
 

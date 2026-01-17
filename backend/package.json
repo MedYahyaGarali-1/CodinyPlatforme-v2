@@ -11,7 +11,12 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["driving", "exam", "education", "api"],
+  "keywords": [
+    "driving",
+    "exam",
+    "education",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -20,6 +25,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3"
   },

@@ -354,6 +354,25 @@ router.post('/students/:id/events', auth, async (req, res) => {
       [id, title, starts_at, ends_at ?? null, location ?? null, notes ?? null]
     );
 
+    // 🔔 Send push notification to student
+    const notificationService = require('../services/notification.service');
+    const eventDate = new Date(starts_at).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    await notificationService.sendNotificationToStudent(id, {
+      title: '📅 New Event Scheduled',
+      body: `${title} - ${eventDate}${location ? ` at ${location}` : ''}`,
+      data: {
+        type: 'event_created',
+        eventId: insert.rows[0].id,
+        studentId: id
+      }
+    });
+
     res.status(201).json({ message: 'Event created', id: insert.rows[0].id });
   } catch (e) {
     console.error(e);

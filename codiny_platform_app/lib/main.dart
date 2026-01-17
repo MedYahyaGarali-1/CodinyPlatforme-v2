@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'app/app_entry.dart';
 import 'app/app_theme.dart';
@@ -8,6 +9,7 @@ import 'state/session/session_controller.dart';
 import 'state/subscriptions/subscription_service.dart';
 import 'state/theme/theme_controller.dart';
 import 'data/repositories/course_repository.dart';
+import 'services/notification_service.dart';
 
 // Global navigator key for navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -18,6 +20,14 @@ Future<void> main() async {
     print('🚀 App starting...');
     WidgetsFlutterBinding.ensureInitialized();
     print('✅ Flutter binding initialized');
+
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp();
+      print('✅ Firebase initialized');
+    } catch (e) {
+      print('⚠️  Firebase initialization failed: $e (continuing without push notifications)');
+    }
 
     final session = SessionController();
     print('✅ SessionController created');
@@ -32,6 +42,16 @@ Future<void> main() async {
         },
       );
       print('✅ Session restored');
+
+      // Initialize push notifications if logged in
+      if (session.token != null) {
+        try {
+          await NotificationService.initialize(session);
+          print('✅ Push notifications initialized');
+        } catch (e) {
+          print('⚠️  Failed to initialize push notifications: $e');
+        }
+      }
     } catch (e) {
       print('❌ Error restoring session: $e');
       // Continue with fresh session
