@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "189172303842",
+    "project_id": "codiny-driving-exam",
+    "storage_bucket": "codiny-driving-exam.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189172303842:android:3070ccbe4ea32ff40b5bbb",
+        "android_client_info": {
+          "package_name": "com.codiny.platform.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOyBqGovF5UJN1lG5NaDruM-i7p9SH3a8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

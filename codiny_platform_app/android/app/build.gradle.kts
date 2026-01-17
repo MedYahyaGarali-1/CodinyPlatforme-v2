@@ -5,6 +5,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 // Load keystore properties
@@ -75,4 +76,8 @@ flutter {
 dependencies {
     // Multidex support for apps with many methods
     implementation("androidx.multidex:multidex:2.0.1")
+    
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }
