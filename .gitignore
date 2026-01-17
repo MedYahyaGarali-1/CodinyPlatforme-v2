@@ -55,3 +55,34 @@ desktop.ini
 !*.md
 !DEPLOYMENT_GUIDE.md
 !PLAY_STORE_GUIDE.md
+
+# Temporary documentation and scripts
+COPY_PASTE_DESCRIPTION_*.txt
+FINAL_DESCRIPTION_*.txt
+CRASH_FIX_SUMMARY.md
+FINAL_APPEAL_WITH_SCREENSHOT.md
+GOOGLE_APPEAL_TEMPLATE.md
+GOOGLE_FINAL_DESCRIPTION.md
+JWT_TOKEN_DURATION_UPDATE.md
+LAUNCH_PROCEDURE.md
+LOADING_SCREEN_FIX.md
+PLAY_CONSOLE_SUBMISSION_GUIDE.md
+PLAY_STORE_CHECKLIST.md
+PLAY_STORE_DESCRIPTION_FIXED.md
+PRIVACY_POLICY_CHECKLIST.md
+SOLUTION_NO_GOVERNMENT_LINKS.md
+START_HERE.md
+TOKEN_EXPIRATION_FIX.md
+UML_DIAGRAMS_RAPPORT.md
+check-ready.bat
+create-test-accounts.sql
+generate-signing-key.bat
+
+# Temporary Flutter scripts
+codiny_platform_app/FIREBASE_SETUP.md
+codiny_platform_app/IMAGE_STRATEGY_SUMMARY.md
+codiny_platform_app/IS_168MB_TOO_LARGE.md
+codiny_platform_app/compress-images-simple.ps1
+codiny_platform_app/compress-images.bat
+codiny_platform_app/compress-images.ps1
+codiny_platform_app/compress-with-magick.bat
