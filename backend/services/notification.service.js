@@ -21,14 +21,25 @@ function initializeFirebase() {
       return;
     }
 
+    // Parse and validate service account JSON
+    let parsedAccount;
+    try {
+      parsedAccount = JSON.parse(serviceAccount);
+    } catch (parseError) {
+      console.error('❌ Invalid FIREBASE_SERVICE_ACCOUNT_JSON format:', parseError.message);
+      console.warn('⚠️  Push notifications disabled due to invalid configuration');
+      return;
+    }
+
     admin.initializeApp({
-      credential: admin.credential.cert(JSON.parse(serviceAccount))
+      credential: admin.credential.cert(parsedAccount)
     });
 
     firebaseInitialized = true;
     console.log('✅ Firebase Admin initialized for push notifications');
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin:', error.message);
+    console.warn('⚠️  Push notifications disabled - continuing without FCM');
   }
 }
 
