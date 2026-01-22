@@ -96,14 +96,34 @@ async function login({ identifier, password }) {
     throw new Error('Invalid credentials');
   }
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
+  // Generate access token (1 hour)
+  const accessToken = jwt.sign(
+    { id: user.id, role: user.role, type: 'access' },
     jwtConfig.secret,
-    { expiresIn: jwtConfig.expiresIn }
+    { expiresIn: jwtConfig.accessTokenExpiry }
   );
 
+  // Generate refresh token (30 days)
+  const refreshToken = jwt.sign(
+    { id: user.id, role: user.role, type: 'refresh' },
+    jwtConfig.secret,
+    { expiresIn: jwtConfig.refreshTokenExpiry }
+  );
+
+  // Hash and store refresh token in database
+  const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+  await pool.query(
+    'UPDATE users SET refresh_token = $1, refresh_token_expires_at = $2 WHERE id = $3',
+    [hashedRefreshToken, expiresAt, user.id]
+  );
+
+  console.log('✅ Tokens generated for user:', user.id);
+
   return {
-    token,
+    accessToken,
+    refreshToken,
     user: {
       id: user.id,
       name: user.name,
@@ -114,9 +134,81 @@ async function login({ identifier, password }) {
 
 console.log('✅ Functions defined: register =', typeof register, ', login =', typeof login);
 
+/**
+ * Refresh access token using refresh token
+ */
+async function refreshAccessToken(refreshToken) {
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, jwtConfig.secret);
+    
+    if (decoded.type !== 'refresh') {
+      throw new Error('Invalid token type');
+    }
+
+    // Get user and their stored refresh token
+    const result = await pool.query(
+      'SELECT id, role, refresh_token, refresh_token_expires_at FROM users WHERE id = $1',
+      [decoded.id]
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error('User not found');
+    }
+
+    const user = result.rows[0];
+
+    // Check if refresh token expired
+    if (new Date() > new Date(user.refresh_token_expires_at)) {
+      throw new Error('Refresh token expired');
+    }
+
+    // Verify refresh token matches stored hash
+    const match = await bcrypt.compare(refreshToken, user.refresh_token);
+    
+    if (!match) {
+      throw new Error('Invalid refresh token');
+    }
+
+    // Generate new access token
+    const newAccessToken = jwt.sign(
+      { id: user.id, role: user.role, type: 'access' },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.accessTokenExpiry }
+    );
+
+    // Generate new refresh token (token rotation)
+    const newRefreshToken = jwt.sign(
+      { id: user.id, role: user.role, type: 'refresh' },
+      jwtConfig.secret,
+      { expiresIn: jwtConfig.refreshTokenExpiry }
+    );
+
+    // Hash and update refresh token in database
+    const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await pool.query(
+      'UPDATE users SET refresh_token = $1, refresh_token_expires_at = $2 WHERE id = $3',
+      [hashedRefreshToken, expiresAt, user.id]
+    );
+
+    console.log('✅ Tokens refreshed for user:', user.id);
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
+    };
+  } catch (error) {
+    console.error('❌ Token refresh failed:', error.message);
+    throw new Error('Invalid or expired refresh token');
+  }
+}
+
 module.exports = {
   register,
-  login
+  login,
+  refreshAccessToken
 };
 
 console.log('✅ Module exported:', module.exports);

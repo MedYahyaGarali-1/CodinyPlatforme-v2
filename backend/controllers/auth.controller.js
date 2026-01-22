@@ -39,7 +39,24 @@ async function login(req, res) {
   }
 }
 
+async function refreshToken(req, res) {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token required' });
+    }
+
+    const result = await authService.refreshAccessToken(refreshToken);
+
+    res.json(result);
+  } catch (err) {
+    res.status(401).json({ message: err.message });
+  }
+}
+
 module.exports = {
   register,
   login,
+  refreshToken,
 };
