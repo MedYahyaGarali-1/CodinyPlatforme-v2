@@ -1,128 +1,127 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../data/repositories/school_repository.dart';
+import '../../../data/models/school/school_student.dart';
+import '../../../state/session/session_controller.dart';
 
-class ManageStudentsScreen extends StatelessWidget {
+class ManageStudentsScreen extends StatefulWidget {
   const ManageStudentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // TEMP DATA (backend later)
-    final students = [
-      {
-        'name': 'Ali Ben Salah',
-        'active': true,
-      },
-      {
-        'name': 'Youssef Trabelsi',
-        'active': false,
-      },
-    ];
+  State<ManageStudentsScreen> createState() => _ManageStudentsScreenState();
+}
 
+class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
+  final SchoolRepository _repo = SchoolRepository();
+  List<SchoolStudent> _students = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStudents();
+  }
+
+  Future<void> _loadStudents() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final session = context.read<SessionController>();
+      final token = session.token;
+      if (token == null) throw Exception('Not authenticated');
+
+      final students = await _repo.getStudents(token: token);
+      setState(() {
+        _students = students;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Students'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // ➕ Add student button
-            ElevatedButton.icon(
-              icon: const Icon(Icons.person_add),
-              label: const Text('Add Student'),
-              onPressed: () {
-                _showAddStudentDialog(context);
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // 📋 Students list
-            Expanded(
-              child: ListView.builder(
-                itemCount: students.length,
-                itemBuilder: (context, index) {
-                  final student = students[index];
-                  final isActive = student['active'] as bool;
-
-                  return Card(
-                    child: ListTile(
-                      title: Text(student['name'] as String),
-                      subtitle: Text(
-                        isActive ? 'Active' : 'Expired',
-                        style: TextStyle(
-                          color: isActive ? Colors.green : Colors.red,
-                        ),
-                      ),
-                      trailing: isActive
-                          ? const Icon(Icons.check, color: Colors.green)
-                          : ElevatedButton(
-                              onPressed: () {
-                                _confirmActivation(context);
-                              },
-                              child: const Text('Activate'),
-                            ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: _buildBody(),
     );
   }
 
-  // ---------------- DIALOGS ----------------
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  void _showAddStudentDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Add Student'),
-        content: Column(
+    if (_error != null) {
+      return Center(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Full name'),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration:
-                  const InputDecoration(labelText: 'Phone or Email'),
+            Text('Error: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadStudents,
+              child: const Text('Retry'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Backend later
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Student added')),
-              );
-            },
-            child: const Text('Add'),
-          ),
-        ],
+      );
+    }
+
+    if (_students.isEmpty) {
+      return const Center(
+        child: Text('No students yet'),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadStudents,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _students.length,
+        itemBuilder: (context, index) {
+          final student = _students[index];
+          final isActive = student.hasActiveSubscription;
+
+          return Card(
+            child: ListTile(
+              title: Text(student.name),
+              subtitle: Text(
+                isActive ? 'Active' : 'Inactive',
+                style: TextStyle(
+                  color: isActive ? Colors.green : Colors.red,
+                ),
+              ),
+              trailing: isActive
+                  ? const Icon(Icons.check, color: Colors.green)
+                  : ElevatedButton(
+                      onPressed: () => _confirmActivation(student),
+                      child: const Text('Activate'),
+                    ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  void _confirmActivation(BuildContext context) {
+  void _confirmActivation(SchoolStudent student) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Activate Subscription'),
-        content: const Text(
-          'Activate 30 days for this student?\n\n'
+        content: Text(
+          'Activate 30 days for ${student.name}?\n\n'
           'You earn 20 DT\n'
           'You owe 30 DT to platform',
         ),
@@ -132,17 +131,37 @@ class ManageStudentsScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // Backend later
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Subscription activated')),
-              );
+              await _activateStudent(student);
             },
             child: const Text('Confirm'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _activateStudent(SchoolStudent student) async {
+    try {
+      final session = context.read<SessionController>();
+      final token = session.token;
+      if (token == null) throw Exception('Not authenticated');
+
+      await _repo.activateStudent(token: token, studentId: student.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${student.name} activated!')),
+        );
+        _loadStudents(); // Refresh list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e')),
+        );
+      }
+    }
   }
 }

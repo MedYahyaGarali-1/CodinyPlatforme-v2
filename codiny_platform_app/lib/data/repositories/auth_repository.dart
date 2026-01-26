@@ -20,7 +20,7 @@ class AuthRepository {
     );
 
     // 🔐 Extract data
-    final token = response['token'] as String;
+    final token = response['accessToken'] as String;
     final userJson = response['user'] as Map<String, dynamic>;
 
     final user = User.fromJson(userJson);

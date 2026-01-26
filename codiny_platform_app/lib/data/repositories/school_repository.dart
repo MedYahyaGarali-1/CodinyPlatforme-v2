@@ -86,4 +86,14 @@ class SchoolRepository {
       token: token,
     );
   }
+
+  /// Activate a student's subscription (30 days)
+  /// School earns 20 DT, owes 30 DT to platform
+  Future<void> activateStudent({required String token, required String studentId}) async {
+    await _api.post(
+      '/schools/students/activate',
+      token: token,
+      body: {'studentId': studentId},
+    );
+  }
 }
