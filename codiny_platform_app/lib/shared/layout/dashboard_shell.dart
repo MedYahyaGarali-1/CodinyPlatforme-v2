@@ -90,6 +90,7 @@ class DashboardShellState extends State<DashboardShell> {
           : BottomNavigationBar(
               currentIndex: _currentIndex,
               onTap: (i) => setState(() => _currentIndex = i),
+              type: BottomNavigationBarType.fixed,
               items: widget.tabs
                   .map((t) => BottomNavigationBarItem(
                         icon: Icon(t.icon),

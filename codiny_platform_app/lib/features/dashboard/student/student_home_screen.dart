@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../../state/session/session_controller.dart';
 import '../../../state/subscriptions/subscription_service.dart';
-import '../../../shared/layout/base_scaffold.dart';
 import '../../../shared/layout/dashboard_shell.dart';
 import '../../../shared/ui/snackbar_helper.dart';
 import 'my_calendar_screen.dart';
@@ -28,26 +27,23 @@ class StudentHomeScreen extends StatelessWidget {
     final isActive = subscriptionEnd != null &&
         subscriptionService.isActive(subscriptionEnd, now);
 
-    return BaseScaffold(
-      title: 'Dashboard',
-      showBackButton: false, // Dashboard screen - no back button
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔒 Access Status Banner
-            _buildAccessStatusBanner(context, profile),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 🔒 Access Status Banner
+          _buildAccessStatusBanner(context, profile),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // 👋 Welcome Header with enhanced design
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.secondary,
+          // 👋 Welcome Header with enhanced design
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.secondary,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -250,7 +246,6 @@ class StudentHomeScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -282,7 +277,6 @@ class StudentHomeScreen extends StatelessWidget {
 
     final onboardingComplete = profile.onboardingComplete ?? false;
     final accessMethod = profile.accessMethod;
-    final schoolApprovalStatus = profile.schoolApprovalStatus;
     final paymentVerified = profile.paymentVerified ?? false;
     final isActive = profile.isActive ?? false;
     final accessLevel = profile.accessLevel ?? 'none';
