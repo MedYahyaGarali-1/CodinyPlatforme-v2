@@ -2,7 +2,7 @@ name: codiny_platform_app
 description: "Driving exam preparation platform"
 publish_to: 'none'
 
-version: 1.0.2+6
+version: 1.0.2+7
 
 environment:
   sdk: ^3.10.4
