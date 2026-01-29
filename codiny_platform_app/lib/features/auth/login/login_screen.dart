@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen>
     return AuthScaffold(
       title: 'Welcome Back! 👋',
       subtitle: 'Login to continue your learning journey',
-      illustration: 'assets/illustrations/logo.png',
+      illustration: 'assets/illustrations/login.png',
       child: FadeTransition(
         opacity: _fade,
         child: SlideTransition(

@@ -85,18 +85,32 @@ Future<void> main() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final SessionController session;
 
   const MyApp({super.key, required this.session});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final ThemeController _themeController = ThemeController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load saved theme preference
+    _themeController.loadTheme();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: session),
+        ChangeNotifierProvider.value(value: widget.session),
         Provider(create: (_) => SubscriptionService()),
-        ChangeNotifierProvider(create: (_) => ThemeController()),
+        ChangeNotifierProvider.value(value: _themeController),
         Provider(create: (_) => CourseRepository()),
       ],
       child: Consumer<ThemeController>(

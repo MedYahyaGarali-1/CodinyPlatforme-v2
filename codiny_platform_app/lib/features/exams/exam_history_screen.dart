@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/exam/exam_models.dart';
 import '../../data/repositories/exam_repository.dart';
+import '../../shared/ui/staggered_animation.dart';
 import 'exam_review_screen.dart';
 
 class ExamHistoryScreen extends StatefulWidget {
@@ -12,7 +13,8 @@ class ExamHistoryScreen extends StatefulWidget {
   State<ExamHistoryScreen> createState() => _ExamHistoryScreenState();
 }
 
-class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
+class _ExamHistoryScreenState extends State<ExamHistoryScreen>
+    with TickerProviderStateMixin, StaggeredAnimationMixin {
   final ExamRepository _examRepo = ExamRepository();
   
   bool _isLoading = true;
@@ -22,7 +24,14 @@ class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    initAnimations(sectionCount: 12);
     _loadExamHistory();
+  }
+
+  @override
+  void dispose() {
+    disposeAnimations();
+    super.dispose();
   }
 
   Future<void> _loadExamHistory() async {
@@ -32,6 +41,8 @@ class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
         _exams = exams;
         _isLoading = false;
       });
+      // Start animations after data loads
+      startAnimations();
     } catch (e) {
       setState(() {
         _error = 'فشل تحميل سجل الاختبارات: $e';
@@ -84,7 +95,7 @@ class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
                       child: Column(
                         children: [
                           // Statistics summary
-                          Container(
+                          buildAnimatedSection(0, Container(
                             padding: const EdgeInsets.all(16),
                             color: Colors.blue[50],
                             child: Row(
@@ -114,7 +125,7 @@ class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
                                 ),
                               ],
                             ),
-                          ),
+                          )),
                           
                           // Exam list
                           Expanded(
@@ -123,7 +134,7 @@ class _ExamHistoryScreenState extends State<ExamHistoryScreen> {
                               itemCount: _exams.length,
                               itemBuilder: (context, index) {
                                 final exam = _exams[index];
-                                return _buildExamCard(exam);
+                                return buildAnimatedSection(index + 1, _buildExamCard(exam));
                               },
                             ),
                           ),

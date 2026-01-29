@@ -8,6 +8,7 @@ import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
 import '../../../shared/ui/snackbar_helper.dart';
 import '../../../shared/ui/smooth_page_transition.dart';
+import '../../../shared/ui/staggered_animation.dart';
 import 'attach_student_screen.dart';
 import 'student_info_screen.dart';
 
@@ -326,77 +327,79 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen> {
                 final st = students[i];
                 final isActive = st.hasActiveSubscription;
 
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  child: Card(
-                    elevation: 2,
-                    shadowColor: isActive ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: isActive 
-                            ? Colors.blue.shade100
-                            : Theme.of(context).colorScheme.outlineVariant,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () async {
-                        await context.pushSmooth(
-                          StudentInfoScreen(student: st),
-                        );
-                        _refresh();
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: isActive
-                              ? LinearGradient(
-                                  colors: [
-                                    Colors.blue.shade50.withOpacity(0.3),
-                                    Colors.white,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
+                return StaggeredAnimationWrapper(
+                  index: i,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    child: Card(
+                      elevation: 2,
+                      shadowColor: isActive ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isActive 
+                              ? Colors.blue.shade100
+                              : Theme.of(context).colorScheme.outlineVariant,
+                          width: 1.5,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              // Enhanced Avatar with gradient and shadow
-                              Hero(
-                                tag: 'student_${st.id}',
-                                child: Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: isActive
-                                          ? [Colors.blue.shade400, Colors.blue.shade700]
-                                          : [Colors.grey.shade400, Colors.grey.shade600],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: isActive 
-                                            ? Colors.blue.withOpacity(0.3)
-                                            : Colors.grey.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () async {
+                          await context.pushSmooth(
+                            StudentInfoScreen(student: st),
+                          );
+                          _refresh();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: isActive
+                                ? LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade50.withOpacity(0.3),
+                                      Colors.white,
                                     ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                // Enhanced Avatar with gradient and shadow
+                                Hero(
+                                  tag: 'student_${st.id}',
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: isActive
+                                            ? [Colors.blue.shade400, Colors.blue.shade700]
+                                            : [Colors.grey.shade400, Colors.grey.shade600],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: isActive 
+                                              ? Colors.blue.withOpacity(0.3)
+                                              : Colors.grey.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.person_rounded,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
                                   ),
-                                  child: const Icon(
-                                    Icons.person_rounded,
-                                    color: Colors.white,
-                                    size: 32,
-                                  ),
-                                ),
                               ),
                               const SizedBox(width: 16),
                               // Info with better typography
@@ -483,7 +486,7 @@ class _SchoolStudentsScreenState extends State<SchoolStudentsScreen> {
                       ),
                     ),
                   ),
-                );
+                ));
               },
             ),
           );

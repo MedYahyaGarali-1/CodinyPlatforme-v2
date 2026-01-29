@@ -8,8 +8,71 @@ import '../../../shared/layout/dashboard_shell.dart';
 import '../../../shared/ui/snackbar_helper.dart';
 import 'my_calendar_screen.dart';
 
-class StudentHomeScreen extends StatelessWidget {
+class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
+
+  @override
+  State<StudentHomeScreen> createState() => _StudentHomeScreenState();
+}
+
+class _StudentHomeScreenState extends State<StudentHomeScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late List<Animation<double>> _fadeAnimations;
+  late List<Animation<Offset>> _slideAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    // Create staggered animations for 6 sections
+    _fadeAnimations = List.generate(6, (index) {
+      final start = index * 0.1;
+      final end = start + 0.4;
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut),
+        ),
+      );
+    });
+
+    _slideAnimations = List.generate(6, (index) {
+      final start = index * 0.1;
+      final end = start + 0.4;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.2),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(start, end.clamp(0.0, 1.0), curve: Curves.easeOut),
+        ),
+      );
+    });
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedSection(int index, Widget child) {
+    return FadeTransition(
+      opacity: _fadeAnimations[index.clamp(0, 5)],
+      child: SlideTransition(
+        position: _slideAnimations[index.clamp(0, 5)],
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,229 +90,258 @@ class StudentHomeScreen extends StatelessWidget {
     final isActive = subscriptionEnd != null &&
         subscriptionService.isActive(subscriptionEnd, now);
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 🔒 Access Status Banner
-          _buildAccessStatusBanner(context, profile),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-          const SizedBox(height: 16),
-
-          // 👋 Welcome Header with enhanced design
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [
+                  const Color(0xFF1a1a2e),
+                  const Color(0xFF16213e),
+                  const Color(0xFF0f0f1a),
+                ]
+              : [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.03),
+                  Theme.of(context).colorScheme.secondary.withOpacity(0.02),
+                  Theme.of(context).colorScheme.surface,
                 ],
-              ),
-              child: Row(
+          stops: const [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🔒 Access Status Banner
+              _buildAnimatedSection(0, _buildAccessStatusBanner(context, profile)),
+
+              const SizedBox(height: 20),
+
+              // 👋 Welcome Header with enhanced design
+              _buildAnimatedSection(1, Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back! 👋',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            session.user?.name ?? 'Student',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.waving_hand_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+
+              const SizedBox(height: 24),
+
+              if (profile?.id.isNotEmpty == true) ...[
+                _buildAnimatedSection(2, Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.badge,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    title: Text(
+                      'Your Student ID',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        profile!.id,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                            ),
+                      ),
+                    ),
+                    trailing: IconButton(
+                      tooltip: 'Copy ID',
+                      icon: const Icon(Icons.copy),
+                      onPressed: () async {
+                        await Clipboard.setData(ClipboardData(text: profile.id));
+                        if (!context.mounted) return;
+                        SnackBarHelper.showSuccess(context, 'Student ID copied to clipboard');
+                      },
+                    ),
+                  ),
+                )),
+                const SizedBox(height: 20),
+              ],
+
+              // ⏳ Subscription status
+              _buildAnimatedSection(3, Row(
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back! 👋',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          session.user?.name ?? 'Student',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    child: _InfoCard(
+                      title: 'Subscription',
+                      value: isActive ? '$daysLeft days' : 'Expired',
+                      icon: Icons.timer_outlined,
+                      gradient: isActive
+                          ? [Colors.green.shade400, Colors.green.shade600]
+                          : [Colors.orange.shade400, Colors.orange.shade600],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.waving_hand_rounded,
-                      color: Colors.white,
-                      size: 32,
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: _InfoCard(
+                      title: 'Progress',
+                      value: '42%',
+                      icon: Icons.bar_chart_outlined,
+                      gradient: [Colors.blue, Colors.purple],
                     ),
                   ),
                 ],
-              ),
-            ),
+              )),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 28),
 
-            if (profile?.id.isNotEmpty == true) ...[
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
+              // 🚀 Actions
+              _buildAnimatedSection(4, Text(
+                'Quick Actions',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
-                    child: Icon(
-                      Icons.badge,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(
-                    'Your Student ID',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      profile!.id,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
-                    ),
-                  ),
-                  trailing: IconButton(
-                    tooltip: 'Copy ID',
-                    icon: const Icon(Icons.copy),
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: profile.id));
-                      if (!context.mounted) return;
-                      SnackBarHelper.showSuccess(context, 'Student ID copied to clipboard');
+              )),
+              const SizedBox(height: 16),
+              _buildAnimatedSection(5, GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.2,
+                children: [
+                  _ActionCard(
+                    icon: Icons.play_circle_outline,
+                    label: 'Courses',
+                    gradient: const [Colors.blue, Colors.cyan],
+                    onTap: _canAccessFeatures(profile) ? () {
+                      // Navigate to Courses tab (index 2)
+                      DashboardShell.of(context)?.changeTab(2);
+                    } : () {
+                      SnackBarHelper.showError(
+                        context,
+                        'Please complete payment to access courses',
+                      );
                     },
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
+                  _ActionCard(
+                    icon: Icons.quiz_outlined,
+                    label: 'Tests',
+                    gradient: const [Colors.purple, Colors.pink],
+                    onTap: _canAccessFeatures(profile) ? () {
+                      // Navigate to Exams tab (index 3)
+                      DashboardShell.of(context)?.changeTab(3);
+                    } : () {
+                      SnackBarHelper.showError(
+                        context,
+                        'Please complete payment to access tests',
+                      );
+                    },
+                  ),
+                  _ActionCard(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'View Calendar',
+                    gradient: const [Colors.orange, Colors.deepOrange],
+                    onTap: _canAccessFeatures(profile) ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MyCalendarScreen(),
+                        ),
+                      );
+                    } : () {
+                      SnackBarHelper.showError(
+                        context,
+                        'Please complete payment to access calendar',
+                      );
+                    },
+                  ),
+                ],
+              )),
+              
+              const SizedBox(height: 24),
             ],
-
-            // ⏳ Subscription status
-            Row(
-              children: [
-                Expanded(
-                  child: _InfoCard(
-                    title: 'Subscription',
-                    value: isActive ? '$daysLeft days' : 'Expired',
-                    icon: Icons.timer_outlined,
-                    gradient: isActive
-                        ? [Colors.green.shade400, Colors.green.shade600]
-                        : [Colors.orange.shade400, Colors.orange.shade600],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: _InfoCard(
-                    title: 'Progress',
-                    value: '42%',
-                    icon: Icons.bar_chart_outlined,
-                    gradient: [Colors.blue, Colors.purple],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // 🚀 Actions
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.2,
-              children: [
-                _ActionCard(
-                  icon: Icons.play_circle_outline,
-                  label: 'Courses',
-                  gradient: const [Colors.blue, Colors.cyan],
-                  onTap: _canAccessFeatures(profile) ? () {
-                    // Navigate to Courses tab (index 2)
-                    DashboardShell.of(context)?.changeTab(2);
-                  } : () {
-                    SnackBarHelper.showError(
-                      context,
-                      'Please complete payment to access courses',
-                    );
-                  },
-                ),
-                _ActionCard(
-                  icon: Icons.quiz_outlined,
-                  label: 'Tests',
-                  gradient: const [Colors.purple, Colors.pink],
-                  onTap: _canAccessFeatures(profile) ? () {
-                    // Navigate to Exams tab (index 3)
-                    DashboardShell.of(context)?.changeTab(3);
-                  } : () {
-                    SnackBarHelper.showError(
-                      context,
-                      'Please complete payment to access tests',
-                    );
-                  },
-                ),
-                _ActionCard(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'View Calendar',
-                  gradient: const [Colors.orange, Colors.deepOrange],
-                  onTap: _canAccessFeatures(profile) ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MyCalendarScreen(),
-                      ),
-                    );
-                  } : () {
-                    SnackBarHelper.showError(
-                      context,
-                      'Please complete payment to access calendar',
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
+      ),
     );
   }
 
-  static bool _canAccessFeatures(dynamic profile) {
+  bool _canAccessFeatures(dynamic profile) {
     if (profile == null) return false;
     
     final accessMethod = profile.accessMethod;
@@ -269,7 +361,7 @@ class StudentHomeScreen extends StatelessWidget {
     return true;
   }
 
-  static Widget _buildAccessStatusBanner(BuildContext context, dynamic profile) {
+  Widget _buildAccessStatusBanner(BuildContext context, dynamic profile) {
     // If profile doesn't exist, show nothing
     if (profile == null) {
       return const SizedBox.shrink();
@@ -336,7 +428,7 @@ class StudentHomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor.withOpacity(0.1),
         border: Border.all(color: backgroundColor, width: 2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [

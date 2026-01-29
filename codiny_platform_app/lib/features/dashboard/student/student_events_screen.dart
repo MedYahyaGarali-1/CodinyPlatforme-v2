@@ -6,6 +6,7 @@ import '../../../data/models/school/student_event.dart';
 import '../../../state/session/session_controller.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
+import '../../../shared/ui/staggered_animation.dart';
 
 class StudentEventsScreen extends StatefulWidget {
   const StudentEventsScreen({super.key});
@@ -37,7 +38,7 @@ class _StudentEventsScreenState extends State<StudentEventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return FutureBuilder<List<StudentEvent>>(
       future: _futureEvents,
@@ -75,10 +76,44 @@ class _StudentEventsScreenState extends State<StudentEventsScreen> {
 
         // Empty State
         if (events.isEmpty) {
-          return EmptyState(
-            icon: Icons.calendar_today_outlined,
-            title: 'No Upcoming Events',
-            message: 'Your driving school will schedule lessons and exams here.',
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? const Color(0xFF6C63FF).withOpacity(0.1) 
+                        : const Color(0xFF3B82F6).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.calendar_today_outlined,
+                    size: 48,
+                    color: isDark ? const Color(0xFF6C63FF) : const Color(0xFF3B82F6),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'No Upcoming Events',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1D1E33),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your driving school will schedule\nlessons and exams here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white60 : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
@@ -89,32 +124,47 @@ class _StudentEventsScreenState extends State<StudentEventsScreen> {
         // Success State
         return RefreshIndicator(
           onRefresh: () async => _loadEvents(),
+          color: isDark ? const Color(0xFF6C63FF) : const Color(0xFF3B82F6),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               if (upcoming.isNotEmpty) ...[
-                _SectionHeader(
-                  title: 'Upcoming Events',
-                  count: upcoming.length,
-                  color: cs.primary,
+                StaggeredAnimationWrapper(
+                  index: 0,
+                  child: _SectionHeader(
+                    title: 'Upcoming Events',
+                    count: upcoming.length,
+                    isDark: isDark,
+                    isUpcoming: true,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                ...upcoming.map((event) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _EventCard(event: event, isPast: false),
+                const SizedBox(height: 16),
+                ...upcoming.asMap().entries.map((entry) => StaggeredAnimationWrapper(
+                      index: entry.key + 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _EventCard(event: entry.value, isPast: false, isDark: isDark),
+                      ),
                     )),
                 const SizedBox(height: 24),
               ],
               if (past.isNotEmpty) ...[
-                _SectionHeader(
-                  title: 'Past Events',
-                  count: past.length,
-                  color: cs.onSurfaceVariant,
+                StaggeredAnimationWrapper(
+                  index: upcoming.length + 1,
+                  child: _SectionHeader(
+                    title: 'Past Events',
+                    count: past.length,
+                    isDark: isDark,
+                    isUpcoming: false,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                ...past.map((event) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _EventCard(event: event, isPast: true),
+                const SizedBox(height: 16),
+                ...past.asMap().entries.map((entry) => StaggeredAnimationWrapper(
+                      index: upcoming.length + entry.key + 2,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _EventCard(event: entry.value, isPast: true, isDark: isDark),
+                      ),
                     )),
               ],
             ],
@@ -128,38 +178,55 @@ class _StudentEventsScreenState extends State<StudentEventsScreen> {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final int count;
-  final Color color;
+  final bool isDark;
+  final bool isUpcoming;
 
   const _SectionHeader({
     required this.title,
     required this.count,
-    required this.color,
+    required this.isDark,
+    required this.isUpcoming,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = isUpcoming 
+        ? (isDark ? const Color(0xFF6C63FF) : const Color(0xFF3B82F6))
+        : (isDark ? Colors.grey[400]! : Colors.grey[600]!);
+
     return Row(
       children: [
+        Container(
+          width: 4,
+          height: 24,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 12),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1D1E33),
+          ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             count.toString(),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
           ),
         ),
       ],
@@ -170,174 +237,220 @@ class _SectionHeader extends StatelessWidget {
 class _EventCard extends StatelessWidget {
   final StudentEvent event;
   final bool isPast;
+  final bool isDark;
 
   const _EventCard({
     required this.event,
     required this.isPast,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isToday = event.isToday;
+    final dayName = DateFormat('EEEE').format(event.startsAt);
+    
+    // Different colors for variety
+    final List<List<Color>> colorPalette = [
+      [const Color(0xFF667EEA), const Color(0xFF764BA2)], // Purple-Blue
+      [const Color(0xFF11998E), const Color(0xFF38EF7D)], // Teal-Green
+      [const Color(0xFFFC466B), const Color(0xFF3F5EFB)], // Pink-Blue
+      [const Color(0xFFF093FB), const Color(0xFFF5576C)], // Pink-Red
+      [const Color(0xFF4FACFE), const Color(0xFF00F2FE)], // Blue-Cyan
+      [const Color(0xFF43E97B), const Color(0xFF38F9D7)], // Green-Cyan
+      [const Color(0xFFFA709A), const Color(0xFFFEE140)], // Pink-Yellow
+    ];
+    
+    // Pick color based on event title hash for consistency
+    final colorIndex = event.title.hashCode.abs() % colorPalette.length;
+    final cardColors = isPast 
+        ? [const Color(0xFF4A5568), const Color(0xFF2D3748)] // Muted for past
+        : colorPalette[colorIndex];
+    
+    final accentColor = isPast ? Colors.grey[400]! : cardColors[0];
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isToday ? cs.primary : cs.outlineVariant,
-          width: isToday ? 2 : 1,
-        ),
+    return Container(
+      height: 130,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: (isPast ? Colors.grey : cardColors[0]).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Date Circle
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isToday
-                      ? [cs.primary, cs.primary.withOpacity(0.7)]
-                      : isPast
-                          ? [cs.surfaceContainerHighest, cs.surfaceContainerHigh]
-                          : [cs.primaryContainer, cs.primaryContainer.withOpacity(0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
+      child: Row(
+        children: [
+          // Left side - Gradient with date
+          Container(
+            width: 120,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: cardColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    event.startsAt.day.toString(),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: isToday
-                              ? cs.onPrimary
-                              : isPast
-                                  ? cs.onSurfaceVariant
-                                  : cs.onPrimaryContainer,
-                        ),
-                  ),
-                  Text(
-                    DateFormat('MMM').format(event.startsAt).toUpperCase(),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isToday
-                              ? cs.onPrimary
-                              : isPast
-                                  ? cs.onSurfaceVariant
-                                  : cs.onPrimaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                bottomLeft: Radius.circular(24),
               ),
             ),
-            const SizedBox(width: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Month and Day number
+                Text(
+                  DateFormat('MMM').format(event.startsAt),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                Text(
+                  event.startsAt.day.toString(),
+                  style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Day name
+                Text(
+                  dayName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+                if (isToday) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'TODAY',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
 
-            // Event Info
-            Expanded(
+          // Right side - Light with event details
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1D1E33) : const Color(0xFFF8F9FA),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Event type label
+                  Text(
+                    isPast ? 'PAST' : 'UPCOMING',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Event item with colored bar
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Container(
+                        width: 3,
+                        height: 40,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          color: accentColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                       Expanded(
-                        child: Text(
-                          event.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.title,
+                              style: TextStyle(
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : const Color(0xFF1D1E33),
                                 decoration: isPast ? TextDecoration.lineThrough : null,
+                                decorationColor: Colors.grey,
                               ),
-                        ),
-                      ),
-                      if (isToday)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [cs.primary, cs.primary.withOpacity(0.8)],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'TODAY',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: cs.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time, size: 16, color: cs.onSurfaceVariant),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${event.formattedTime} • ${event.formattedDateLong}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
+                            const SizedBox(height: 4),
+                            Text(
+                              event.formattedTime,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                              ),
                             ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
+
+                  // Location if available
                   if (event.location != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 16, color: cs.onSurfaceVariant),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: isDark ? Colors.white54 : Colors.grey[500],
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             event.location!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white54 : Colors.grey[500],
+                            ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                   ],
-                  if (event.notes != null) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.info_outline, size: 16, color: cs.onSurfaceVariant),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              event.notes!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

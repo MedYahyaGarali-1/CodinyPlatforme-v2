@@ -72,6 +72,77 @@ router.get('/me', auth, async (req, res) => {
 });
 
 /**
+ * GET /schools/activity
+ * Get recent activity for school dashboard (students joined, exams passed, payments)
+ */
+router.get('/activity', auth, async (req, res) => {
+  try {
+    const school = await requireSchool(req, res);
+    if (!school) return;
+
+    // Get recent students who joined (attached to school)
+    const newStudentsResult = await pool.query(`
+      SELECT 
+        'new_student' as type,
+        u.name as student_name,
+        st.school_approved_at as created_at
+      FROM students st
+      JOIN users u ON u.id = st.user_id
+      WHERE st.school_id = $1 
+        AND st.school_approved_at IS NOT NULL
+      ORDER BY st.school_approved_at DESC
+      LIMIT 5
+    `, [school.id]);
+
+    // Get recent passed exams (score >= 80%)
+    const passedExamsResult = await pool.query(`
+      SELECT 
+        'passed_exam' as type,
+        u.name as student_name,
+        es.completed_at as created_at,
+        es.correct_answers,
+        es.total_questions
+      FROM exam_sessions es
+      JOIN students st ON es.student_id = st.id
+      JOIN users u ON st.user_id = u.id
+      WHERE st.school_id = $1 
+        AND es.completed_at IS NOT NULL
+        AND (es.correct_answers::float / NULLIF(es.total_questions, 0) * 100) >= 80
+      ORDER BY es.completed_at DESC
+      LIMIT 5
+    `, [school.id]);
+
+    // Get recent payments
+    const paymentsResult = await pool.query(`
+      SELECT 
+        'payment' as type,
+        u.name as student_name,
+        rt.school_revenue as amount,
+        rt.created_at
+      FROM revenue_tracking rt
+      JOIN students st ON rt.student_id = st.id
+      JOIN users u ON st.user_id = u.id
+      WHERE rt.school_id = $1
+      ORDER BY rt.created_at DESC
+      LIMIT 5
+    `, [school.id]);
+
+    // Combine and sort all activities by date
+    const allActivities = [
+      ...newStudentsResult.rows,
+      ...passedExamsResult.rows,
+      ...paymentsResult.rows
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+     .slice(0, 10); // Return top 10 most recent
+
+    res.json(allActivities);
+  } catch (err) {
+    console.error('Error loading school activity:', err);
+    res.status(500).json({ message: 'Failed to load activity', error: err.message });
+  }
+});
+
+/**
  * POST /schools/students/activate
  * School activates a student (cash payment)
  */

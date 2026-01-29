@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../data/repositories/school_repository.dart';
 import '../../../data/models/school/school_student.dart';
 import '../../../state/session/session_controller.dart';
+import '../../../shared/ui/staggered_animation.dart';
 
 class ManageStudentsScreen extends StatefulWidget {
   const ManageStudentsScreen({super.key});
@@ -11,7 +12,8 @@ class ManageStudentsScreen extends StatefulWidget {
   State<ManageStudentsScreen> createState() => _ManageStudentsScreenState();
 }
 
-class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
+class _ManageStudentsScreenState extends State<ManageStudentsScreen>
+    with TickerProviderStateMixin, StaggeredAnimationMixin {
   final SchoolRepository _repo = SchoolRepository();
   List<SchoolStudent> _students = [];
   bool _loading = true;
@@ -20,7 +22,14 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
   @override
   void initState() {
     super.initState();
+    initAnimations(sectionCount: 10);
     _loadStudents();
+  }
+
+  @override
+  void dispose() {
+    disposeAnimations();
+    super.dispose();
   }
 
   Future<void> _loadStudents() async {
@@ -39,6 +48,8 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
         _students = students;
         _loading = false;
       });
+      // Start animations after data loads
+      startAnimations();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -93,7 +104,7 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
           final student = _students[index];
           final isActive = student.hasActiveSubscription;
 
-          return Card(
+          return buildAnimatedSection(index, Card(
             child: ListTile(
               title: Text(student.name),
               subtitle: Text(
@@ -109,7 +120,7 @@ class _ManageStudentsScreenState extends State<ManageStudentsScreen> {
                       child: const Text('Activate'),
                     ),
             ),
-          );
+          ));
         },
       ),
     );

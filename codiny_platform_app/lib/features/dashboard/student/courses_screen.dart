@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/ui/access_guard.dart';
-import '../../../shared/layout/dashboard_shell.dart';
+import '../../../shared/ui/staggered_animation.dart';
 import '../../../data/repositories/course_repository.dart';
 import '../../../data/models/course_models.dart';
 import '../../courses/screens/course_detail_screen.dart';
@@ -14,7 +14,8 @@ class CoursesScreen extends StatefulWidget {
   State<CoursesScreen> createState() => _CoursesScreenState();
 }
 
-class _CoursesScreenState extends State<CoursesScreen> {
+class _CoursesScreenState extends State<CoursesScreen>
+    with TickerProviderStateMixin, StaggeredAnimationMixin {
   List<Course> _courses = [];
   bool _isLoading = true;
   String? _error;
@@ -22,7 +23,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   void initState() {
     super.initState();
+    initAnimations(sectionCount: 10); // Support up to 10 course cards
     _loadCourses();
+  }
+
+  @override
+  void dispose() {
+    disposeAnimations();
+    super.dispose();
   }
 
   Future<void> _loadCourses() async {
@@ -39,6 +47,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
         _courses = courses;
         _isLoading = false;
       });
+      
+      // Start animations after data loads
+      startAnimations();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -52,37 +63,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
     return AccessGuard(
       requiresFullAccess: true,
       featureName: 'courses',
-      child: Scaffold(
-        backgroundColor: const Color(0xFF0A0E21),
-        appBar: AppBar(
-          backgroundColor: const Color(0xFF1D1E33),
-          title: const Text(
-            'الدروس',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          centerTitle: true,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              // Navigate back to Home tab (index 0) in the dashboard
-              final dashboardState = DashboardShell.of(context);
-              if (dashboardState != null) {
-                dashboardState.changeTab(0);
-              }
-            },
-          ),
-        ),
-        body: _buildBody(),
-      ),
+      child: _buildBody(),
     );
   }
 
   Widget _buildBody() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -104,10 +91,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
             const SizedBox(height: 16),
             Text(
               'حدث خطأ',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF1D1E33),
               ),
             ),
             const SizedBox(height: 8),
@@ -116,9 +103,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
               child: Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white70,
+                  color: isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
             ),
@@ -145,25 +132,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.play_circle_outline,
+              Icons.menu_book_rounded,
               size: 80,
-              color: Colors.white.withOpacity(0.3),
+              color: isDark ? Colors.white.withOpacity(0.3) : Colors.grey[300],
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'لا توجد دروس متاحة حالياً',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF1D1E33),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'سيتم إضافة الدروس قريباً',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white70,
+                color: isDark ? Colors.white70 : Colors.grey[600],
               ),
             ),
           ],
@@ -171,153 +158,247 @@ class _CoursesScreenState extends State<CoursesScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadCourses,
-      color: const Color(0xFF6C63FF),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _courses.length,
-        itemBuilder: (context, index) {
-          final course = _courses[index];
-          return _buildCourseCard(course);
-        },
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [
+                  const Color(0xFF1a1a2e),
+                  const Color(0xFF16213e),
+                  const Color(0xFF0f0f1a),
+                ]
+              : [
+                  Colors.blue.shade50.withOpacity(0.5),
+                  Colors.purple.shade50.withOpacity(0.3),
+                  Theme.of(context).colorScheme.surface,
+                ],
+          stops: const [0.0, 0.4, 1.0],
+        ),
+      ),
+      child: RefreshIndicator(
+        onRefresh: _loadCourses,
+        color: const Color(0xFF6C63FF),
+        child: ListView.builder(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          itemCount: _courses.length,
+          itemBuilder: (context, index) {
+            final course = _courses[index];
+            return buildAnimatedSection(index, _buildCourseCard(course, isDark, index));
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildCourseCard(Course course) {
+  Widget _buildCourseCard(Course course, bool isDark, int index) {
+    // Different gradients for different course types
+    final bool isTrafficSigns = course.pdfPath == 'interactive_traffic_signs';
+    
+    final List<Color> cardGradient = isTrafficSigns
+        ? [const Color(0xFF11998e), const Color(0xFF38ef7d)] // Green-teal for traffic signs
+        : [const Color(0xFF667eea), const Color(0xFF764ba2)]; // Blue-purple for PDF
+    
+    final IconData courseIcon = course.isLocked
+        ? Icons.lock_rounded
+        : isTrafficSigns
+            ? Icons.traffic_rounded
+            : Icons.menu_book_rounded;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            const Color(0xFF1D1E33),
-            const Color(0xFF1D1E33).withOpacity(0.8),
-          ],
+          colors: cardGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: cardGradient[0].withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: course.isLocked
-              ? null
-              : () {
-                  // Check if this is the interactive traffic signs course
-                  if (course.pdfPath == 'interactive_traffic_signs') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TrafficSignsViewerScreen(),
+      child: Stack(
+        children: [
+          // Background decorative circles
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -15,
+            bottom: -15,
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+          // Main content
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: course.isLocked
+                  ? null
+                  : () {
+                      if (isTrafficSigns) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TrafficSignsViewerScreen(),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CourseDetailScreen(course: course),
+                          ),
+                        );
+                      }
+                    },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    // Chevron on the left (for RTL)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CourseDetailScreen(course: course),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 18,
                       ),
-                    );
-                  }
-                },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    course.isLocked 
-                        ? Icons.lock 
-                        : (course.pdfPath == 'interactive_traffic_signs' 
-                            ? Icons.traffic 
-                            : Icons.picture_as_pdf),
-                    color: const Color(0xFF6C63FF),
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        course.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        course.description,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
+                    ),
+                    const SizedBox(width: 16),
+                    // Content in the middle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Icon(
-                            Icons.category,
-                            size: 14,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                          const SizedBox(width: 4),
+                          // Title
                           Text(
-                            course.category,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.5),
+                            course.title,
+                            textDirection: TextDirection.rtl,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.description,
-                            size: 14,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                          const SizedBox(width: 4),
+                          const SizedBox(height: 8),
+                          // Description
                           Text(
-                            '${course.pageCount} صفحة',
+                            course.description,
+                            textDirection: TextDirection.rtl,
+                            textAlign: TextAlign.right,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.85),
+                              height: 1.4,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 12),
+                          // Metadata chips
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildMetaChip(
+                                Icons.description_outlined,
+                                '${course.pageCount} صفحة',
+                              ),
+                              const SizedBox(width: 8),
+                              _buildMetaChip(
+                                Icons.category_outlined,
+                                course.category,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Icon on the right (for RTL)
+                    Container(
+                      width: 65,
+                      height: 65,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.1),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        courseIcon,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ],
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.5),
-                  size: 20,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetaChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            textDirection: TextDirection.rtl,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            icon,
+            size: 14,
+            color: Colors.white,
+          ),
+        ],
       ),
     );
   }

@@ -96,4 +96,43 @@ class SchoolRepository {
       body: {'studentId': studentId},
     );
   }
+
+  /// Get recent activity for school dashboard
+  Future<List<SchoolActivity>> getRecentActivity({required String token}) async {
+    final res = await _api.get('/schools/activity', token: token);
+    if (res is List) {
+      return res.map((e) => SchoolActivity.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    throw Exception('Unexpected response from /schools/activity: $res');
+  }
+}
+
+/// Model for school activity items
+class SchoolActivity {
+  final String type; // 'new_student', 'passed_exam', 'payment'
+  final String studentName;
+  final DateTime createdAt;
+  final double? amount; // For payments
+  final int? correctAnswers; // For exams
+  final int? totalQuestions; // For exams
+
+  SchoolActivity({
+    required this.type,
+    required this.studentName,
+    required this.createdAt,
+    this.amount,
+    this.correctAnswers,
+    this.totalQuestions,
+  });
+
+  factory SchoolActivity.fromJson(Map<String, dynamic> json) {
+    return SchoolActivity(
+      type: json['type'] as String,
+      studentName: json['student_name'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      amount: json['amount'] != null ? (json['amount'] as num).toDouble() : null,
+      correctAnswers: json['correct_answers'] as int?,
+      totalQuestions: json['total_questions'] as int?,
+    );
+  }
 }

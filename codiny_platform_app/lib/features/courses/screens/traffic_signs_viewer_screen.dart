@@ -8,15 +8,28 @@ class TrafficSignsViewerScreen extends StatefulWidget {
   State<TrafficSignsViewerScreen> createState() => _TrafficSignsViewerScreenState();
 }
 
-class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
+class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen>
+    with TickerProviderStateMixin {
   String _selectedCategory = 'الكل';
   List<TrafficSign> _filteredSigns = [];
   TrafficSign? _selectedSign;
+  AnimationController? _animationController;
 
   @override
   void initState() {
     super.initState();
     _filteredSigns = TrafficSignsData.getAllSigns();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animationController!.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
   }
 
   void _filterByCategory(String category) {
@@ -31,6 +44,9 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
             .toList();
       }
     });
+    // Restart animation when filter changes
+    _animationController?.reset();
+    _animationController?.forward();
   }
 
   void _showSignDetail(TrafficSign sign) {
@@ -39,160 +55,376 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
     });
   }
 
+  // Get icon for category
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'الكل':
+        return Icons.apps_rounded;
+      case 'السرعة':
+        return Icons.speed_rounded;
+      case 'تحذيرية':
+        return Icons.warning_rounded;
+      case 'منع':
+        return Icons.block_rounded;
+      case 'إلزامية':
+        return Icons.check_circle_rounded;
+      default:
+        return Icons.category_rounded;
+    }
+  }
+
+  // Get color for category
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'الكل':
+        return const Color(0xFF6C63FF);
+      case 'السرعة':
+        return Colors.blue;
+      case 'تحذيرية':
+        return Colors.amber;
+      case 'منع':
+        return Colors.red;
+      case 'إلزامية':
+        return Colors.green;
+      default:
+        return const Color(0xFF6C63FF);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: isDark ? const Color(0xFF0A0E21) : Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1D1E33),
-        title: const Text(
+        backgroundColor: isDark ? const Color(0xFF1D1E33) : Colors.white,
+        title: Text(
           'إشارات المرور',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: isDark ? Colors.white : const Color(0xFF1D1E33),
           ),
         ),
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: isDark ? Colors.white : const Color(0xFF1D1E33),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          // Category filter
-          Container(
-            height: 60,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: const BoxDecoration(
-              color: Color(0xFF1D1E33),
-            ),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: TrafficSignsData.getCategories().length,
-              itemBuilder: (context, index) {
-                final category = TrafficSignsData.getCategories()[index];
-                final isSelected = _selectedCategory == category;
-                return Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: FilterChip(
-                    label: Text(
-                      category,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white70,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    selected: isSelected,
-                    onSelected: (_) => _filterByCategory(category),
-                    backgroundColor: const Color(0xFF0A0E21),
-                    selectedColor: const Color(0xFF6C63FF),
-                    checkmarkColor: Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? const Color(0xFF6C63FF) : Colors.white24,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [
+                    const Color(0xFF1a1a2e),
+                    const Color(0xFF16213e),
+                    const Color(0xFF0f0f1a),
+                  ]
+                : [
+                    Colors.blue.shade50.withOpacity(0.5),
+                    Colors.purple.shade50.withOpacity(0.3),
+                    Colors.grey[50]!,
+                  ],
+            stops: const [0.0, 0.4, 1.0],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Category filter
+            _buildCategoryFilter(isDark),
+
+            // Signs count
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_filteredSigns.length} إشارة',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white60 : Colors.grey[600],
                     ),
                   ),
-                );
-              },
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.traffic_rounded,
+                    size: 18,
+                    color: isDark ? Colors.white60 : Colors.grey[600],
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Signs grid
-          Expanded(
-            child: _selectedSign != null
-                ? _buildSignDetail()
-                : _buildSignsGrid(),
-          ),
-        ],
+            // Signs grid
+            Expanded(
+              child: _selectedSign != null
+                  ? _buildSignDetail(isDark)
+                  : _buildSignsGrid(isDark),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSignsGrid() {
+  Widget _buildCategoryFilter(bool isDark) {
+    final categories = TrafficSignsData.getCategories();
+    
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1D1E33).withOpacity(0.5) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        reverse: true, // RTL scroll
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final isSelected = _selectedCategory == category;
+          final categoryColor = _getCategoryColor(category);
+          
+          return Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _filterByCategory(category),
+                  borderRadius: BorderRadius.circular(25),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? LinearGradient(
+                              colors: [
+                                categoryColor,
+                                categoryColor.withOpacity(0.7),
+                              ],
+                            )
+                          : null,
+                      color: isSelected 
+                          ? null 
+                          : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey[100]),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: isSelected 
+                            ? Colors.transparent 
+                            : (isDark ? Colors.white24 : Colors.grey[300]!),
+                        width: 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: categoryColor.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          category,
+                          style: TextStyle(
+                            color: isSelected 
+                                ? Colors.white 
+                                : (isDark ? Colors.white70 : Colors.grey[700]),
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          _getCategoryIcon(category),
+                          size: 18,
+                          color: isSelected 
+                              ? Colors.white 
+                              : (isDark ? Colors.white60 : Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSignsGrid(bool isDark) {
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.85,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 0.82,
       ),
       itemCount: _filteredSigns.length,
       itemBuilder: (context, index) {
         final sign = _filteredSigns[index];
-        return _buildSignCard(sign);
+        
+        // If animation controller is not ready, just show the card
+        if (_animationController == null) {
+          return _buildSignCard(sign, isDark);
+        }
+        
+        // Limit stagger delay to first 15 items for performance
+        final delay = (index < 15) ? index * 0.03 : 0.45;
+        
+        return AnimatedBuilder(
+          animation: _animationController!,
+          builder: (context, child) {
+            double animationValue = 0.0;
+            if (_animationController!.value > delay) {
+              animationValue = Curves.easeOut.transform(
+                ((_animationController!.value - delay) / (1.0 - delay)).clamp(0.0, 1.0),
+              );
+            }
+            
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - animationValue)),
+              child: Opacity(
+                opacity: animationValue,
+                child: child,
+              ),
+            );
+          },
+          child: _buildSignCard(sign, isDark),
+        );
       },
     );
   }
 
-  Widget _buildSignCard(TrafficSign sign) {
-    return InkWell(
-      onTap: () => _showSignDetail(sign),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1D1E33),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+  Widget _buildSignCard(TrafficSign sign, bool isDark) {
+    final categoryColor = _getCategoryColorByKey(sign.category);
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showSignDetail(sign),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: categoryColor.withOpacity(0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
+              color: categoryColor.withOpacity(0.2),
+              width: 1.5,
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Image.asset(
-                  sign.imagePath,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.image_not_supported,
-                      size: 48,
-                      color: Colors.white38,
-                    );
-                  },
+          ),
+          child: Column(
+            children: [
+              // Sign image
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Image.asset(
+                    sign.imagePath,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.image_not_supported_rounded,
+                        size: 40,
+                        color: isDark ? Colors.white38 : Colors.grey[400],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.2),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
+              // Sign name
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      categoryColor.withOpacity(0.15),
+                      categoryColor.withOpacity(0.08),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(18),
+                  ),
+                ),
+                child: Text(
+                  sign.arabicName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1D1E33),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              child: Text(
-                sign.arabicName,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSignDetail() {
+  Color _getCategoryColorByKey(String categoryKey) {
+    switch (categoryKey) {
+      case 'speed':
+        return Colors.blue;
+      case 'warning':
+        return Colors.amber.shade700;
+      case 'prohibition':
+        return Colors.red;
+      case 'mandatory':
+        return Colors.green;
+      case 'priority':
+        return Colors.orange;
+      case 'information':
+        return Colors.teal;
+      default:
+        return const Color(0xFF6C63FF);
+    }
+  }
+
+  Widget _buildSignDetail(bool isDark) {
     final sign = _selectedSign!;
+    final categoryColor = _getCategoryColorByKey(sign.category);
+    
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,18 +432,36 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
           // Back button
           Align(
             alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _selectedSign = null;
-                });
-              },
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF6C63FF)),
-              label: const Text(
-                'رجوع للقائمة',
-                style: TextStyle(
-                  color: Color(0xFF6C63FF),
-                  fontSize: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedSign = null;
+                  });
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: categoryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'رجوع للقائمة',
+                        style: TextStyle(
+                          color: categoryColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, color: categoryColor, size: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -220,32 +470,32 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
 
           // Sign image - large
           Container(
-            height: 300,
+            height: 280,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6C63FF).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: categoryColor.withOpacity(0.3),
+                  blurRadius: 25,
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(40),
+            padding: const EdgeInsets.all(32),
             child: Image.asset(
               sign.imagePath,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image_not_supported,
-                  size: 100,
-                  color: Colors.grey,
+                return Icon(
+                  Icons.image_not_supported_rounded,
+                  size: 80,
+                  color: Colors.grey[400],
                 );
               },
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
 
           // Sign info card
           Container(
@@ -253,22 +503,30 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF6C63FF),
-                  const Color(0xFF6C63FF).withOpacity(0.7),
+                  categoryColor,
+                  categoryColor.withOpacity(0.75),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: categoryColor.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Arabic name
                 Text(
                   sign.arabicName,
+                  textDirection: TextDirection.rtl,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -278,12 +536,13 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
                 // English name
                 Text(
                   sign.name,
+                  textDirection: TextDirection.rtl,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     color: Colors.white.withOpacity(0.9),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // Category badge
                 Container(
@@ -298,12 +557,6 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.category,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
                         _getCategoryNameInArabic(sign.category),
                         style: const TextStyle(
@@ -312,35 +565,51 @@ class _TrafficSignsViewerScreenState extends State<TrafficSignsViewerScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.category_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // Description
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.info_outline,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           sign.description,
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.right,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             color: Colors.white,
-                            height: 1.5,
+                            height: 1.6,
                           ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.info_outline_rounded,
+                          color: Colors.white,
+                          size: 22,
                         ),
                       ),
                     ],

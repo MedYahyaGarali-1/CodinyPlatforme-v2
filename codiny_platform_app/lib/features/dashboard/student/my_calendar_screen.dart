@@ -8,6 +8,7 @@ import '../../../state/session/session_controller.dart';
 import '../../../shared/ui/shimmer_loading.dart';
 import '../../../shared/ui/empty_state.dart';
 import '../../../shared/layout/base_scaffold.dart';
+import '../../../shared/ui/staggered_animation.dart';
 
 class MyCalendarScreen extends StatefulWidget {
   const MyCalendarScreen({super.key});
@@ -138,17 +139,20 @@ class _MyCalendarScreenState extends State<MyCalendarScreen> {
         final eventsForDate = groupedEvents[dateKey]!;
         final date = DateTime.parse(dateKey);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDateHeader(date),
-            const SizedBox(height: 12),
-            ...eventsForDate.map((event) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildEventCard(event),
-            )),
-            const SizedBox(height: 8),
-          ],
+        return StaggeredAnimationWrapper(
+          index: index,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDateHeader(date),
+              const SizedBox(height: 12),
+              ...eventsForDate.map((event) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildEventCard(event),
+              )),
+              const SizedBox(height: 8),
+            ],
+          ),
         );
       },
     );

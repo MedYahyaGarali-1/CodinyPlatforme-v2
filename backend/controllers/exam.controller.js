@@ -90,6 +90,28 @@ exports.submitExam = async (req, res) => {
     const userId = req.user.id;
     const { session_id, answers, time_taken_seconds } = req.body;
 
+    console.log('Submit exam request:', { 
+      userId, 
+      session_id, 
+      answersCount: answers?.length, 
+      time_taken_seconds 
+    });
+
+    // Validate inputs
+    if (!session_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Session ID is required'
+      });
+    }
+
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Answers must be provided as an array'
+      });
+    }
+
     // Get student ID from user ID
     const studentId = await getStudentId(userId);
 
@@ -111,10 +133,14 @@ exports.submitExam = async (req, res) => {
 
     let correctCount = 0;
     let wrongCount = 0;
+    let unansweredCount = 0;
 
     // Process each answer
     for (const answer of answers) {
       const { question_id, student_answer } = answer;
+
+      // Skip if no question_id
+      if (!question_id) continue;
 
       // Get correct answer
       const questionResult = await client.query(
@@ -125,20 +151,30 @@ exports.submitExam = async (req, res) => {
       if (questionResult.rows.length === 0) continue;
 
       const correctAnswer = questionResult.rows[0].correct_answer;
-      const isCorrect = student_answer === correctAnswer;
+      
+      // Handle unanswered questions (empty string or null)
+      const isUnanswered = !student_answer || student_answer.trim() === '';
+      const isCorrect = !isUnanswered && student_answer === correctAnswer;
 
-      if (isCorrect) correctCount++;
-      else wrongCount++;
+      if (isUnanswered) {
+        unansweredCount++;
+        wrongCount++; // Unanswered counts as wrong
+      } else if (isCorrect) {
+        correctCount++;
+      } else {
+        wrongCount++;
+      }
 
-      // Store answer
+      // Store answer (store empty string for unanswered)
       await client.query(`
         INSERT INTO exam_answers (exam_session_id, question_id, student_answer, is_correct)
         VALUES ($1, $2, $3, $4)
-      `, [session_id, question_id, student_answer, isCorrect]);
+      `, [session_id, question_id, student_answer || '', isCorrect]);
     }
 
-    // Calculate score and pass/fail
-    const score = (correctCount / 30) * 100;
+    // Calculate score and pass/fail (based on 30 questions total)
+    const totalQuestions = 30;
+    const score = (correctCount / totalQuestions) * 100;
     const passed = correctCount >= 23;
 
     // Update exam session
@@ -155,23 +191,33 @@ exports.submitExam = async (req, res) => {
 
     await client.query('COMMIT');
 
+    console.log('Exam submitted successfully:', {
+      session_id,
+      correctCount,
+      wrongCount,
+      unansweredCount,
+      score: score.toFixed(2),
+      passed
+    });
+
     res.json({
       success: true,
       result: {
         correct_answers: correctCount,
         wrong_answers: wrongCount,
+        unanswered: unansweredCount,
         score: score.toFixed(2),
         passed,
         passing_score: 23,
-        time_taken_seconds
+        time_taken_seconds: time_taken_seconds || 0
       }
     });
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error submitting exam:', error);
+    console.error('Error submitting exam:', error.message, error.stack);
     res.status(500).json({
       success: false,
-      error: 'Failed to submit exam'
+      error: `Failed to submit exam: ${error.message}`
     });
   } finally {
     client.release();
