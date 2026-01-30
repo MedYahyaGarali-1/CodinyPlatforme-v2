@@ -204,6 +204,41 @@ class DashboardTranslations {
       DashboardLanguage.french: 'Hier',
       DashboardLanguage.arabic: 'أمس',
     },
+    'upcomingEvents': {
+      DashboardLanguage.english: 'Upcoming Events',
+      DashboardLanguage.french: 'Événements à Venir',
+      DashboardLanguage.arabic: 'الأحداث القادمة',
+    },
+    'noUpcomingEvents': {
+      DashboardLanguage.english: 'No upcoming events',
+      DashboardLanguage.french: 'Aucun événement à venir',
+      DashboardLanguage.arabic: 'لا توجد أحداث قادمة',
+    },
+    'scheduleEvent': {
+      DashboardLanguage.english: 'Schedule Event',
+      DashboardLanguage.french: 'Planifier',
+      DashboardLanguage.arabic: 'جدولة حدث',
+    },
+    'thisMonth': {
+      DashboardLanguage.english: 'This Month',
+      DashboardLanguage.french: 'Ce Mois',
+      DashboardLanguage.arabic: 'هذا الشهر',
+    },
+    'examsPassed': {
+      DashboardLanguage.english: 'Exams Passed',
+      DashboardLanguage.french: 'Examens Réussis',
+      DashboardLanguage.arabic: 'الاختبارات الناجحة',
+    },
+    'today': {
+      DashboardLanguage.english: 'Today',
+      DashboardLanguage.french: 'Aujourd\'hui',
+      DashboardLanguage.arabic: 'اليوم',
+    },
+    'tomorrow': {
+      DashboardLanguage.english: 'Tomorrow',
+      DashboardLanguage.french: 'Demain',
+      DashboardLanguage.arabic: 'غداً',
+    },
   };
 
   static String get(String key, DashboardLanguage lang) {
@@ -341,7 +376,6 @@ class SchoolHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final totalRevenue = earned + owed;
 
     return Directionality(
       textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
@@ -449,64 +483,8 @@ class SchoolHomeScreen extends StatelessWidget {
             _buildSectionHeader(context, tr('overview'), tr('metricsGlance'), isDark),
             const SizedBox(height: 16),
 
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.3,
-              children: [
-                _EnhancedStatCard(
-                  title: tr('totalStudents'),
-                  value: '$students',
-                  icon: Icons.people_rounded,
-                  gradient: LinearGradient(
-                    colors: [cs.primary, cs.primary.withOpacity(0.7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  trend: '+12%',
-                  trendUp: true,
-                  isRTL: isRTL,
-                ),
-                _EnhancedStatCard(
-                  title: tr('yourEarnings'),
-                  value: '$earned TND',
-                  icon: Icons.payments_rounded,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF10B981), Color(0xFF059669)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  trend: '+8%',
-                  trendUp: true,
-                  isRTL: isRTL,
-                ),
-                _EnhancedStatCard(
-                  title: tr('platformShare'),
-                  value: '$owed TND',
-                  icon: Icons.account_balance_rounded,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  isRTL: isRTL,
-                ),
-                _EnhancedStatCard(
-                  title: tr('totalRevenue'),
-                  value: '$totalRevenue TND',
-                  icon: Icons.trending_up_rounded,
-                  gradient: LinearGradient(
-                    colors: [cs.secondary, cs.secondary.withOpacity(0.7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  isRTL: isRTL,
-                ),
-              ],
-            ),
+            // Stats Grid with Pass Rate - Fetch from backend
+            _buildStatsGrid(context, isDark, cs),
 
             const SizedBox(height: 24),
 
@@ -531,6 +509,11 @@ class SchoolHomeScreen extends StatelessWidget {
             // Recent Activity Feed (real data from backend)
             _buildRecentActivitySection(context, isDark),
 
+            const SizedBox(height: 24),
+
+            // Upcoming Events Section
+            _buildUpcomingEventsSection(context, isDark),
+
             const SizedBox(height: 28),
 
             _buildSectionHeader(context, tr('studentManagement'), tr('manageEfficiently'), isDark),
@@ -540,7 +523,8 @@ class SchoolHomeScreen extends StatelessWidget {
             _buildSearchBar(context, isDark),
             const SizedBox(height: 16),
 
-            _EnhancedActionCard(
+            _buildActionCardWithBadge(
+              context: context,
               label: tr('viewAllStudents'),
               icon: Icons.people_rounded,
               description: tr('viewAllStudentsDesc'),
@@ -548,7 +532,7 @@ class SchoolHomeScreen extends StatelessWidget {
                 colors: [cs.primaryContainer, cs.primaryContainer.withOpacity(0.5)],
               ),
               iconColor: cs.primary,
-              isRTL: isRTL,
+              badgeCount: students,
               onTap: () {
                 Navigator.push(
                   context,
@@ -558,7 +542,8 @@ class SchoolHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            _EnhancedActionCard(
+            _buildActionCardWithBadge(
+              context: context,
               label: tr('addNewStudent'),
               icon: Icons.person_add_rounded,
               description: tr('addNewStudentDesc'),
@@ -566,7 +551,6 @@ class SchoolHomeScreen extends StatelessWidget {
                 colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
               ),
               iconColor: const Color(0xFF10B981),
-              isRTL: isRTL,
               onTap: () async {
                 final ok = await Navigator.push(
                   context,
@@ -577,7 +561,8 @@ class SchoolHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            _EnhancedActionCard(
+            _buildActionCardWithBadge(
+              context: context,
               label: tr('studentCalendars'),
               icon: Icons.calendar_month_rounded,
               description: tr('studentCalendarsDesc'),
@@ -585,7 +570,6 @@ class SchoolHomeScreen extends StatelessWidget {
                 colors: [Color(0xFFDDD6FE), Color(0xFFC4B5FD)],
               ),
               iconColor: const Color(0xFF8B5CF6),
-              isRTL: isRTL,
               onTap: () {
                 Navigator.push(
                   context,
@@ -595,7 +579,8 @@ class SchoolHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            _EnhancedActionCard(
+            _buildActionCardWithBadge(
+              context: context,
               label: tr('trackProgress'),
               icon: Icons.assessment_rounded,
               description: tr('trackProgressDesc'),
@@ -603,7 +588,6 @@ class SchoolHomeScreen extends StatelessWidget {
                 colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
               ),
               iconColor: const Color(0xFFF59E0B),
-              isRTL: isRTL,
               onTap: () {
                 Navigator.push(
                   context,
@@ -617,7 +601,8 @@ class SchoolHomeScreen extends StatelessWidget {
             _buildSectionHeader(context, tr('reportsAnalytics'), tr('financialInsights'), isDark),
             const SizedBox(height: 16),
 
-            _EnhancedActionCard(
+            _buildActionCardWithBadge(
+              context: context,
               label: tr('financialReports'),
               icon: Icons.receipt_long_rounded,
               description: tr('financialReportsDesc'),
@@ -625,7 +610,6 @@ class SchoolHomeScreen extends StatelessWidget {
                 colors: [Color(0xFFBFDBFE), Color(0xFF93C5FD)],
               ),
               iconColor: const Color(0xFF3B82F6),
-              isRTL: isRTL,
               onTap: () {
                 Navigator.push(
                   context,
@@ -752,6 +736,655 @@ class SchoolHomeScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  // Stats Grid with Pass Rate from backend
+  Widget _buildStatsGrid(BuildContext context, bool isDark, ColorScheme cs) {
+    final session = context.read<SessionController>();
+    final token = session.token ?? '';
+    final repo = SchoolRepository();
+
+    return FutureBuilder<DashboardStats>(
+      future: token.isNotEmpty ? repo.getDashboardStats(token: token) : null,
+      builder: (context, snapshot) {
+        // Use passed values as fallback
+        final stats = snapshot.data;
+        final displayStudents = stats?.totalStudents ?? students;
+        final displayEarned = stats?.totalEarned.toInt() ?? earned;
+        final displayOwed = stats?.totalOwed.toInt() ?? owed;
+        final passRate = stats?.passRate ?? 0;
+        final totalRevenue = displayEarned + displayOwed;
+
+        return GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.3,
+          children: [
+            _buildAnimatedStatCard(
+              context: context,
+              title: tr('totalStudents'),
+              value: displayStudents,
+              suffix: '',
+              icon: Icons.people_rounded,
+              gradient: LinearGradient(
+                colors: [cs.primary, cs.primary.withOpacity(0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              isDark: isDark,
+            ),
+            _buildAnimatedStatCard(
+              context: context,
+              title: tr('yourEarnings'),
+              value: displayEarned,
+              suffix: ' TND',
+              icon: Icons.payments_rounded,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF10B981), Color(0xFF059669)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              isDark: isDark,
+            ),
+            _buildAnimatedStatCard(
+              context: context,
+              title: tr('passRate'),
+              value: passRate,
+              suffix: '%',
+              icon: Icons.emoji_events_rounded,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              isDark: isDark,
+              showProgressRing: true,
+              progressValue: passRate / 100,
+            ),
+            _buildAnimatedStatCard(
+              context: context,
+              title: tr('totalRevenue'),
+              value: totalRevenue,
+              suffix: ' TND',
+              icon: Icons.trending_up_rounded,
+              gradient: LinearGradient(
+                colors: [cs.secondary, cs.secondary.withOpacity(0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              isDark: isDark,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Animated Stat Card with count-up animation
+  Widget _buildAnimatedStatCard({
+    required BuildContext context,
+    required String title,
+    required int value,
+    required String suffix,
+    required IconData icon,
+    required Gradient gradient,
+    required bool isDark,
+    bool showProgressRing = false,
+    double progressValue = 0,
+  }) {
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: value),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedValue, child) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (!isRTL)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 22),
+                    ),
+                  if (showProgressRing)
+                    SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Stack(
+                        children: [
+                          CircularProgressIndicator(
+                            value: 1,
+                            strokeWidth: 3,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation(Colors.white.withOpacity(0.2)),
+                          ),
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: progressValue),
+                            duration: const Duration(milliseconds: 1500),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, animatedProgress, _) {
+                              return CircularProgressIndicator(
+                                value: animatedProgress,
+                                strokeWidth: 3,
+                                backgroundColor: Colors.transparent,
+                                valueColor: const AlwaysStoppedAnimation(Colors.white),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (isRTL)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 22),
+                    ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '$animatedValue$suffix',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Upcoming Events Section
+  Widget _buildUpcomingEventsSection(BuildContext context, bool isDark) {
+    final session = context.read<SessionController>();
+    final token = session.token ?? '';
+    final repo = SchoolRepository();
+
+    String formatEventDate(DateTime date) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final eventDate = DateTime(date.year, date.month, date.day);
+      
+      if (eventDate == today) {
+        return tr('today');
+      } else if (eventDate == today.add(const Duration(days: 1))) {
+        return tr('tomorrow');
+      } else {
+        final weekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1];
+        return '$weekday, ${date.day}/${date.month}';
+      }
+    }
+
+    String formatTime(DateTime date) {
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (!isRTL) ...[
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.event_note_rounded,
+                        color: Color(0xFF8B5CF6),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      tr('upcomingEvents'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const StudentCalendarsScreen()),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.add,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(
+                    tr('scheduleEvent'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const StudentCalendarsScreen()),
+                    );
+                  },
+                  icon: Icon(
+                    Icons.add,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(
+                    tr('scheduleEvent'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      tr('upcomingEvents'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.event_note_rounded,
+                        color: Color(0xFF8B5CF6),
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<UpcomingEvent>>(
+            future: token.isNotEmpty ? repo.getUpcomingEvents(token: token) : Future.value([]),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              }
+
+              final events = snapshot.data ?? [];
+
+              if (events.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.event_available,
+                          size: 48,
+                          color: isDark ? Colors.white24 : Colors.grey[300],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          tr('noUpcomingEvents'),
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: events.take(3).map((event) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF2D2D44), const Color(0xFF252538)]
+                            : [Colors.grey.shade50, Colors.grey.shade100],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDark ? Colors.white12 : Colors.grey.shade200,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        if (!isRTL)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  formatEventDate(event.startsAt),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF8B5CF6),
+                                  ),
+                                ),
+                                Text(
+                                  formatTime(event.startsAt),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (!isRTL) const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                event.title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    size: 14,
+                                    color: isDark ? Colors.white54 : Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      event.studentName,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white54 : Colors.grey[600],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isRTL) const SizedBox(width: 14),
+                        if (isRTL)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  formatEventDate(event.startsAt),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF8B5CF6),
+                                  ),
+                                ),
+                                Text(
+                                  formatTime(event.startsAt),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        Icon(
+                          isRTL ? Icons.chevron_left : Icons.chevron_right,
+                          color: isDark ? Colors.white38 : Colors.grey[400],
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Action Card with Badge
+  Widget _buildActionCardWithBadge({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required String description,
+    required Gradient gradient,
+    required Color iconColor,
+    required VoidCallback onTap,
+    int? badgeCount,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (!isRTL)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 26),
+                ),
+              if (!isRTL) const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isRTL && badgeCount != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: iconColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$badgeCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                        if (!isRTL && badgeCount != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: iconColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$badgeCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isRTL) const SizedBox(width: 16),
+              if (isRTL)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 26),
+                ),
+              if (!isRTL)
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                ),
+              if (isRTL)
+                Icon(
+                  Icons.chevron_left,
+                  color: isDark ? Colors.white38 : Colors.grey[400],
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1079,272 +1712,4 @@ class _ActivityItem {
     required this.subtitle,
     required this.time,
   });
-}
-
-// Enhanced Stat Card Widget - Fixed overflow
-class _EnhancedStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Gradient gradient;
-  final String? trend;
-  final bool trendUp;
-  final bool isRTL;
-
-  const _EnhancedStatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.gradient,
-    this.trend,
-    this.trendUp = true,
-    this.isRTL = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (!isRTL)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          icon,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                    if (trend != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              trendUp ? Icons.trending_up : Icons.trending_down,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              trend!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (isRTL)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          icon,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                  ],
-                ),
-                const Spacer(),
-                Column(
-                  crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        value,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Enhanced Action Card Widget
-class _EnhancedActionCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String description;
-  final Gradient gradient;
-  final Color iconColor;
-  final VoidCallback onTap;
-  final bool isRTL;
-
-  const _EnhancedActionCard({
-    required this.label,
-    required this.icon,
-    required this.description,
-    required this.gradient,
-    required this.iconColor,
-    required this.onTap,
-    this.isRTL = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                if (isRTL)
-                  Icon(
-                    Icons.arrow_back_ios_rounded,
-                    size: 18,
-                    color: Colors.black38,
-                  ),
-                if (!isRTL)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: iconColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 28,
-                    ),
-                  ),
-                if (!isRTL) const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: isRTL ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.black54,
-                        ),
-                        textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                      ),
-                    ],
-                  ),
-                ),
-                if (isRTL) const SizedBox(width: 16),
-                if (isRTL)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: iconColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 28,
-                    ),
-                  ),
-                if (!isRTL)
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 18,
-                    color: Colors.black38,
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

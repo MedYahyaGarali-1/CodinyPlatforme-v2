@@ -105,6 +105,90 @@ class SchoolRepository {
     }
     throw Exception('Unexpected response from /schools/activity: $res');
   }
+
+  /// Get upcoming events for all students (next 7 days)
+  Future<List<UpcomingEvent>> getUpcomingEvents({required String token}) async {
+    final res = await _api.get('/schools/upcoming-events', token: token);
+    if (res is List) {
+      return res.map((e) => UpcomingEvent.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    throw Exception('Unexpected response from /schools/upcoming-events: $res');
+  }
+
+  /// Get comprehensive dashboard statistics
+  Future<DashboardStats> getDashboardStats({required String token}) async {
+    final res = await _api.get('/schools/dashboard-stats', token: token);
+    if (res is Map) {
+      return DashboardStats.fromJson(Map<String, dynamic>.from(res));
+    }
+    throw Exception('Unexpected response from /schools/dashboard-stats: $res');
+  }
+}
+
+/// Model for dashboard statistics
+class DashboardStats {
+  final int totalStudents;
+  final double totalEarned;
+  final double totalOwed;
+  final int passRate;
+  final int examsThisMonth;
+  final int passedThisMonth;
+
+  DashboardStats({
+    required this.totalStudents,
+    required this.totalEarned,
+    required this.totalOwed,
+    required this.passRate,
+    required this.examsThisMonth,
+    required this.passedThisMonth,
+  });
+
+  factory DashboardStats.fromJson(Map<String, dynamic> json) {
+    return DashboardStats(
+      totalStudents: json['total_students'] as int? ?? 0,
+      totalEarned: (json['total_earned'] as num?)?.toDouble() ?? 0,
+      totalOwed: (json['total_owed'] as num?)?.toDouble() ?? 0,
+      passRate: json['pass_rate'] as int? ?? 0,
+      examsThisMonth: json['exams_this_month'] as int? ?? 0,
+      passedThisMonth: json['passed_this_month'] as int? ?? 0,
+    );
+  }
+}
+
+/// Model for upcoming events
+class UpcomingEvent {
+  final String id;
+  final String title;
+  final DateTime startsAt;
+  final DateTime? endsAt;
+  final String? location;
+  final String? notes;
+  final String studentName;
+  final String studentId;
+
+  UpcomingEvent({
+    required this.id,
+    required this.title,
+    required this.startsAt,
+    this.endsAt,
+    this.location,
+    this.notes,
+    required this.studentName,
+    required this.studentId,
+  });
+
+  factory UpcomingEvent.fromJson(Map<String, dynamic> json) {
+    return UpcomingEvent(
+      id: json['id'].toString(),
+      title: json['title'] as String,
+      startsAt: DateTime.parse(json['starts_at'] as String),
+      endsAt: json['ends_at'] != null ? DateTime.parse(json['ends_at'] as String) : null,
+      location: json['location'] as String?,
+      notes: json['notes'] as String?,
+      studentName: json['student_name'] as String,
+      studentId: json['student_id'].toString(),
+    );
+  }
 }
 
 /// Model for school activity items

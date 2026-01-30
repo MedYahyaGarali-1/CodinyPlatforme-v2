@@ -143,6 +143,92 @@ router.get('/activity', auth, async (req, res) => {
 });
 
 /**
+ * GET /schools/upcoming-events
+ * Get upcoming events for all students in the school (next 7 days)
+ */
+router.get('/upcoming-events', auth, async (req, res) => {
+  try {
+    const school = await requireSchool(req, res);
+    if (!school) return;
+
+    const result = await pool.query(`
+      SELECT 
+        se.id,
+        se.title,
+        se.starts_at,
+        se.ends_at,
+        se.location,
+        se.notes,
+        u.name as student_name,
+        st.id as student_id
+      FROM student_events se
+      JOIN students st ON se.student_id = st.id
+      JOIN users u ON st.user_id = u.id
+      WHERE st.school_id = $1 
+        AND se.starts_at >= NOW()
+        AND se.starts_at <= NOW() + INTERVAL '7 days'
+      ORDER BY se.starts_at ASC
+      LIMIT 10
+    `, [school.id]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error loading upcoming events:', err);
+    res.status(500).json({ message: 'Failed to load upcoming events', error: err.message });
+  }
+});
+
+/**
+ * GET /schools/dashboard-stats
+ * Get comprehensive dashboard statistics including pass rate
+ */
+router.get('/dashboard-stats', auth, async (req, res) => {
+  try {
+    const school = await requireSchool(req, res);
+    if (!school) return;
+
+    // Get basic stats
+    const basicStats = await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM students WHERE school_id = $1)::integer as total_students,
+        COALESCE((SELECT SUM(school_revenue) FROM revenue_tracking WHERE school_id = $1), 0)::numeric as total_earned,
+        COALESCE((SELECT SUM(platform_revenue) FROM revenue_tracking WHERE school_id = $1), 0)::numeric as total_owed
+      `, [school.id]);
+
+    // Get exam pass rate (this month)
+    const examStats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_exams,
+        COUNT(CASE WHEN (correct_answers::float / NULLIF(total_questions, 0) * 100) >= 80 THEN 1 END) as passed_exams
+      FROM exam_sessions es
+      JOIN students st ON es.student_id = st.id
+      WHERE st.school_id = $1 
+        AND es.completed_at IS NOT NULL
+        AND es.completed_at >= DATE_TRUNC('month', CURRENT_DATE)
+    `, [school.id]);
+
+    const stats = basicStats.rows[0];
+    const exams = examStats.rows[0];
+    
+    const passRate = exams.total_exams > 0 
+      ? Math.round((exams.passed_exams / exams.total_exams) * 100) 
+      : 0;
+
+    res.json({
+      total_students: stats.total_students || 0,
+      total_earned: parseFloat(stats.total_earned) || 0,
+      total_owed: parseFloat(stats.total_owed) || 0,
+      pass_rate: passRate,
+      exams_this_month: parseInt(exams.total_exams) || 0,
+      passed_this_month: parseInt(exams.passed_exams) || 0
+    });
+  } catch (err) {
+    console.error('Error loading dashboard stats:', err);
+    res.status(500).json({ message: 'Failed to load dashboard stats', error: err.message });
+  }
+});
+
+/**
  * POST /schools/students/activate
  * School activates a student (cash payment)
  */
@@ -241,7 +327,7 @@ router.post('/students/activate', auth, async (req, res) => {
 
 /**
  * GET /schools/students
- * List students attached to the logged-in school
+ * List students attached to the logged-in school with exam progress stats
  */
 router.get('/students', auth, async (req, res) => {
   try {
@@ -254,9 +340,22 @@ router.get('/students', auth, async (req, res) => {
         u.name,
         st.student_type,
         st.subscription_start,
-        st.subscription_end
+        st.subscription_end,
+        COALESCE(exam_stats.total_exams, 0)::integer as total_exams,
+        COALESCE(exam_stats.passed_exams, 0)::integer as passed_exams,
+        exam_stats.last_exam_at
       FROM students st
       JOIN users u ON u.id = st.user_id
+      LEFT JOIN (
+        SELECT 
+          student_id,
+          COUNT(*) as total_exams,
+          COUNT(CASE WHEN passed = true THEN 1 END) as passed_exams,
+          MAX(completed_at) as last_exam_at
+        FROM exam_sessions
+        WHERE completed_at IS NOT NULL AND score IS NOT NULL
+        GROUP BY student_id
+      ) exam_stats ON exam_stats.student_id = st.id
       WHERE st.school_id = $1
       ORDER BY u.name;
     `;
